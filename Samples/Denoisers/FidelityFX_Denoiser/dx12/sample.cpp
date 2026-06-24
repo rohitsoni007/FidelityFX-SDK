@@ -157,14 +157,6 @@ void Sample::DoSampleUpdates(double deltaTime)
 
     if (pDenoiser)
     {
-        // F7: Cycle through denoiser modes (4 signals -> 2 signals -> 1 signal -> back to 4 signals)
-        if (inputState.GetKeyUpState(Key_F7))
-        {
-            static int32_t currentMode = static_cast<int32_t>(FFX_DENOISER_MODE_4_SIGNALS); // Start at 4 signals (default)
-            currentMode = (currentMode + 1) % 3; // Cycle through 0, 1, 2
-            pDenoiser->SetDenoiserModeHotkey(static_cast<FfxApiDenoiserMode>(currentMode));
-        }
-
         // F8: Toggle dominant light visibility denoising
         if (inputState.GetKeyUpState(Key_F8))
         {

@@ -2750,6 +2750,13 @@ VMA_CALL_PRE void VMA_CALL_POST vmaFreeStatsString(
 #define VMA_IMPLEMENTATION
 #endif
 
+#pragma warning( push )
+#pragma warning( disable : 4100 ) 
+#pragma warning( disable : 4189 )
+#pragma warning( disable : 4127 )
+// In release, to avoid warnings of unreferenced parameter,
+// for code like "VMA_ASSERT(isString);"
+
 #ifdef VMA_IMPLEMENTATION
 #undef VMA_IMPLEMENTATION
 
@@ -3686,6 +3693,8 @@ static void VmaWriteMagicValue(void* pData, VkDeviceSize offset)
     }
 #else
     // no-op
+    UNREFERENCED_PARAMETER(pData);
+    UNREFERENCED_PARAMETER(offset);
 #endif
 }
 
@@ -3701,6 +3710,10 @@ static bool VmaValidateMagicValue(const void* pData, VkDeviceSize offset)
             return false;
         }
     }
+#else
+    // no-op
+    UNREFERENCED_PARAMETER(pData);
+    UNREFERENCED_PARAMETER(offset);
 #endif
     return true;
 }
@@ -6210,7 +6223,7 @@ public:
     bool IsPersistentMap() const { return (m_Flags & FLAG_PERSISTENT_MAP) != 0; }
     bool IsMappingAllowed() const { return (m_Flags & FLAG_MAPPING_ALLOWED) != 0; }
 
-    void SetUserData(VmaAllocator hAllocator, void* pUserData) { m_pUserData = pUserData; }
+    void SetUserData(VmaAllocator, void* pUserData) { m_pUserData = pUserData; }
     void SetName(VmaAllocator hAllocator, const char* pName);
     void FreeName(VmaAllocator hAllocator);
     uint8_t SwapBlockAllocation(VmaAllocator hAllocator, VmaAllocation allocation);
@@ -8134,7 +8147,7 @@ VmaAllocHandle VmaBlockMetadata_Linear::GetAllocationListBegin() const
     return VK_NULL_HANDLE;
 }
 
-VmaAllocHandle VmaBlockMetadata_Linear::GetNextAllocation(VmaAllocHandle prevAlloc) const
+VmaAllocHandle VmaBlockMetadata_Linear::GetNextAllocation(VmaAllocHandle) const
 {
     // Function only used for defragmentation, which is disabled for this algorithm
     VMA_ASSERT(0);
@@ -16437,6 +16450,8 @@ VMA_CALL_PRE void VMA_CALL_POST vmaFreeVirtualBlockStatsString(VmaVirtualBlock V
 #endif // VMA_STATS_STRING_ENABLED
 #endif // _VMA_PUBLIC_INTERFACE
 #endif // VMA_IMPLEMENTATION
+
+#pragma warning( push )
 
 /**
 \page quick_start Quick start

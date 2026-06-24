@@ -74,6 +74,8 @@ namespace cauldron
                 m_NumDescriptors[i] = m_NumViews[i];
                 d3dHeapType = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
                 break;
+            default:
+                CauldronCritical(L"Unsupported heap type requested.");
             }
 
             // Grab the descriptor size for offset calculations

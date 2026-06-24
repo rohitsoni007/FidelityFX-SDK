@@ -37,7 +37,7 @@ RayTracingRenderModule::~RayTracingRenderModule()
     GetContentManager()->RemoveContentListener(this);
 }
 
-void RayTracingRenderModule::Init(const json& initData)
+void RayTracingRenderModule::Init(const json&)
 {
     if (!GetDevice()->FeatureSupported(DeviceFeature::RT_1_1))
     {
@@ -70,7 +70,7 @@ void RayTracingRenderModule::RebuildAnimatedBLAS(CommandList* pCmdList)
     ResourceBarrier(pCmdList, (uint32_t)blasBuildBarriers.size(), blasBuildBarriers.data());
 }
 
-void RayTracingRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void RayTracingRenderModule::Execute(double, CommandList* pCmdList)
 {
     GPUScopedProfileCapture rayTracingMarker(pCmdList, L"RayTracing Updates");
     std::lock_guard<std::mutex> paramsLock(m_CriticalSection);
@@ -106,6 +106,6 @@ void RayTracingRenderModule::OnNewContentLoaded(ContentBlock* pContentBlock)
 
 }
 
-void RayTracingRenderModule::OnContentUnloaded(ContentBlock* pContentBlock)
+void RayTracingRenderModule::OnContentUnloaded(ContentBlock*)
 {
 }

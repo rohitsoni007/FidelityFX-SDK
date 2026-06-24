@@ -28,7 +28,7 @@
 
 namespace cauldron
 {
-    void ParticleLoader::LoadAsync(void* pLoadParams)
+    void ParticleLoader::LoadAsync(void*)
     {
         CauldronCritical(L"No support for single async load for this loader");
     }

@@ -50,9 +50,6 @@ static inline FfxApiResource ffxGetResourceApi(const cauldron::GPUResource* caul
     if (cauldronResource && cauldronResource->IsBuffer() && cauldronResource->GetBufferResource() && cauldronResource->GetBufferResource()->GetDesc().Stride)
         apiRes.description.stride = cauldronResource->GetBufferResource()->GetDesc().Stride;
     return apiRes;
-
-    cauldron::CauldronCritical(L"Unsupported API or Platform for FFX Validation Remap");
-    return FfxApiResource();   // Error
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -122,7 +119,6 @@ static cauldron::ResourceFormat GetFrameworkSurfaceFormat(FfxApiSurfaceFormat fo
         return cauldron::ResourceFormat::RGB10A2_TYPELESS;
     default:
         cauldron::CauldronCritical(L"FFXInterface: Framework: Unsupported format requested. Please implement.");
-        return cauldron::ResourceFormat::Unknown;
     }
 }
 
@@ -173,7 +169,6 @@ inline cauldron::ResourceState GetFrameworkState(FfxApiResourceState state)
         return cauldron::ResourceState::DepthWrite;
     default:
         cauldron::CauldronCritical(L"FFXInterface: Cauldron: Unsupported resource state requested. Please implement.");
-        return cauldron::ResourceState::CommonResource;
     }
 }
 
@@ -193,7 +188,6 @@ inline cauldron::TextureDesc GetFrameworkTextureDescription(const FfxApiResource
         return cauldron::TextureDesc::Tex3D(L"", format, desc.width, desc.height, desc.depth, desc.mipCount, flags);
     default:
         cauldron::CauldronCritical(L"Description should be a texture.");
-        return cauldron::TextureDesc();
     }
 }
 
@@ -402,7 +396,6 @@ inline FfxApiSurfaceFormat GetFfxSurfaceFormat(cauldron::ResourceFormat format)
         return FFX_API_SURFACE_FORMAT_UNKNOWN;
     default:
         cauldron::CauldronCritical(L"ValidationRemap: Unsupported format requested. Please implement.");
-        return FFX_API_SURFACE_FORMAT_UNKNOWN;
     }
 }
 
@@ -488,7 +481,6 @@ static FfxApiBackbufferTransferFunction GetFfxApiBackbufferTransferFunction(cons
         return FfxApiBackbufferTransferFunction::FFX_API_BACKBUFFER_TRANSFER_FUNCTION_SCRGB;
     default:
         cauldron::CauldronCritical(L"FFXInterface: Cauldron: Unsupported display mode requested. Please implement.");
-        return FfxApiBackbufferTransferFunction::FFX_API_BACKBUFFER_TRANSFER_FUNCTION_SRGB;
     }
 }
 

@@ -130,8 +130,10 @@ GBufferOutput MainPS(VS_SURFACE_OUTPUT SurfaceInput
     // Transform motion vectors from NDC space to UV space (+Y is top-down).
     GBuffer.MotionVectors.xy *= float2(0.5f, -0.5f);
     
-    // Absolute linear depth delta
-    GBuffer.MotionVectors.z = abs(SurfaceInput.PrevPosition.w) - abs(SurfaceInput.CurPosition.w);
+    // Cauldron cameras look along the -Z axis in view space
+    // pView.z = -pProjection.w
+    // Signed linear depth delta
+    GBuffer.MotionVectors.z = (-SurfaceInput.PrevPosition.w) - (-SurfaceInput.CurPosition.w);
     
 #endif // HAS_MOTION_VECTORS_RT
 

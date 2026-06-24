@@ -29,7 +29,7 @@ using namespace cauldron;
 static FrameworkInitParamsInternal s_WindowsParams;
 //////////////////////////////////////////////////////////////////////////
 // WinMain
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 {
     // Create the sample and kick it off to the framework to run
     wchar_t sampleName[] = L"FidelityFX FSR FFXAPI v1.3";

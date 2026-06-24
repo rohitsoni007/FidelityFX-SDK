@@ -46,7 +46,7 @@ SkinningRenderModule::~SkinningRenderModule()
     GetContentManager()->RemoveContentListener(this);
 }
 
-void SkinningRenderModule::Init(const json& initData)
+void SkinningRenderModule::Init(const json&)
 {
     // Root Signature
     RootSignatureDesc signatureDesc;
@@ -81,7 +81,7 @@ void SkinningRenderModule::Init(const json& initData)
     SetModuleReady(true);
 }
 
-void SkinningRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void SkinningRenderModule::Execute(double, CommandList* pCmdList)
 {
     GPUScopedProfileCapture skinningMarker(pCmdList, L"ComputeSkinning");
     std::lock_guard<std::mutex> paramsLock(m_CriticalSection);
@@ -201,7 +201,7 @@ void SkinningRenderModule::OnNewContentLoaded(ContentBlock* pContentBlock)
 
 }
 
-void SkinningRenderModule::OnContentUnloaded(ContentBlock* pContentBlock)
+void SkinningRenderModule::OnContentUnloaded(ContentBlock*)
 {
 }
 

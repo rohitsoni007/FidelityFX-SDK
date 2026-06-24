@@ -52,7 +52,7 @@ FPSLimiterRenderModule::~FPSLimiterRenderModule()
     delete m_pPipelineObj;
 }
 
-void FPSLimiterRenderModule::Init(const json& initData)
+void FPSLimiterRenderModule::Init(const json&)
 {
     // Init from config
     const CauldronConfig* pConfig = GetConfig();
@@ -116,10 +116,10 @@ static void TimerSleep(std::chrono::steady_clock::duration duration)
     LARGE_INTEGER dueTime{};
     dueTime.QuadPart = -std::chrono::duration_cast<ticks>(duration).count();
     SetWaitableTimerEx(timer, &dueTime, 0, NULL, NULL, NULL, 0);
-    WaitForSingleObject(timer, -1);
+    WaitForSingleObject(timer, INFINITE);
 }
 
-void FPSLimiterRenderModule::Execute(double deltaTime, cauldron::CommandList* pCmdList)
+void FPSLimiterRenderModule::Execute(double, cauldron::CommandList* pCmdList)
 {
     if (!m_LimitFPS)
         return;

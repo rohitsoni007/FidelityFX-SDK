@@ -152,9 +152,13 @@ extern "C" {
 typedef struct IDXGIAdapter IDXGIAdapter;
 typedef struct IDXGISwapChain IDXGISwapChain;
 typedef struct DXGI_SWAP_CHAIN_DESC DXGI_SWAP_CHAIN_DESC;
+
+#pragma warning(push)
+#pragma warning(disable: 4471)
 enum D3D_DRIVER_TYPE;
 enum D3D_FEATURE_LEVEL;
 enum D3D_PRIMITIVE_TOPOLOGY;
+#pragma warning(pop)
 
 #if !defined (AGS_EXCLUDE_DIRECTX_11)
 // Forward declaration of D3D11 types

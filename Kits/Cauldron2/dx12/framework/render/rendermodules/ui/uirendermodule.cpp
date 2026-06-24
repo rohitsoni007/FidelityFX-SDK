@@ -41,7 +41,7 @@ namespace cauldron
     constexpr uint32_t g_NumThreadX = 8;
     constexpr uint32_t g_NumThreadY = 8;
 
-    void UIRenderModule::Init(const json& initData)
+    void UIRenderModule::Init(const json&)
     {
         //////////////////////////////////////////////////////////////////////////
         // Register UI elements for magnifier
@@ -126,7 +126,7 @@ namespace cauldron
         desc.Height                   = resInfo.DisplayHeight;
         desc.Name                     = L"Magnifier_Intermediate_Color";
         m_pRenderTargetTemp           = GetDynamicResourcePool()->CreateRenderTexture(
-            &desc, [](TextureDesc& desc, uint32_t displayWidth, uint32_t displayHeight, uint32_t renderingWidth, uint32_t renderingHeight) {
+            &desc, [](TextureDesc& desc, uint32_t displayWidth, uint32_t displayHeight, uint32_t, uint32_t) {
                 desc.Width  = displayWidth;
                 desc.Height = displayHeight;
             });
@@ -167,8 +167,6 @@ namespace cauldron
 
         //----------------------------------------------------
         // UI
-        PipelineDesc uiPsoDesc;
-        uiPsoDesc.SetRootSignature(m_pUIRootSignature);
 
         // Setup the shaders to build on the pipeline object
         DefineList defineList;
@@ -304,7 +302,7 @@ namespace cauldron
         delete m_BufferedRenderParams;
     }
 
-    void UIRenderModule::UpdateUI(double deltaTime)
+    void UIRenderModule::UpdateUI(double)
     {
         // Do input updates for magnifier
         // Always use SetData to trigger callback.
@@ -320,7 +318,7 @@ namespace cauldron
         }
     }
 
-    void UIRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+    void UIRenderModule::Execute(double, CommandList* pCmdList)
     {
         GPUScopedProfileCapture UIMarker(pCmdList, L"UI");
 
@@ -477,7 +475,7 @@ namespace cauldron
 
             if (m_bShouldClearRenderTargets)
             {
-                GPUScopedProfileCapture UIMarker(pCmdList, L"Clear UI RTVs");
+                GPUScopedProfileCapture UIMarkerClearRTVs(pCmdList, L"Clear UI RTVs");
                 std::vector<Barrier> barriers;
                 barriers.push_back(Barrier::Transition(m_pRenderTarget->GetResource(),
                     m_pRenderTarget->GetResource()->GetCurrentResourceState(),
@@ -577,8 +575,8 @@ namespace cauldron
 
                 if (m_MagnifierEnabled && m_bRenderToTexture)
                 {
-                    Barrier rtBarrier = Barrier::Transition(m_pRenderTarget->GetResource(), ResourceState::CopyDest, ResourceState::ShaderResource);
-                    ResourceBarrier(pCmdList, 1, &rtBarrier);
+                    Barrier renderTargetBarrier = Barrier::Transition(m_pRenderTarget->GetResource(), ResourceState::CopyDest, ResourceState::ShaderResource);
+                    ResourceBarrier(pCmdList, 1, &renderTargetBarrier);
                 }
             } 
         }
@@ -710,7 +708,6 @@ namespace cauldron
         m_MagnifierCBData.BorderColorRGB = m_LockMagnifierPosition ? Vec4(0.72f, 0.002f, 0.0f, 1.f) : Vec4(0.002f, 0.72f, 0.0f, 1.f);
 
         const int32_t imageSize[2] = { static_cast<int>(m_MagnifierCBData.ImageWidth), static_cast<int>(m_MagnifierCBData.ImageHeight) };
-        const int32_t& width = imageSize[0];
         const int32_t& height = imageSize[1];
 
         const int32_t radiusInPixelsMagifier = static_cast<int>(m_MagnifierCBData.MagnifierScreenRadius * height);
@@ -788,7 +785,7 @@ namespace cauldron
         ResourceBarrier(pCmdList, _countof(barriers), barriers);
     }
 
-    void UIRenderModule::OnResize(const cauldron::ResolutionInfo& resInfo)
+    void UIRenderModule::OnResize(const cauldron::ResolutionInfo&)
     {
         if (!ModuleEnabled())
             return;

@@ -334,14 +334,15 @@ namespace cauldron
                 }
 
                 eyePos = Vec4(m_InvViewMatrix.getTranslation(), 0.f);
+
+                // Modify Pitch/Yaw according to mouse input (prevent from hitting the max/min in pitch by 1 degree to prevent stuttering)
+                m_Pitch = (std::max)(-CAULDRON_PI2 + DEG_TO_RAD(1), (std::min)(m_Pitch, CAULDRON_PI2 - DEG_TO_RAD(1)));
+
                 Vec4 polarVector = PolarToVector(m_Yaw, m_Pitch);
-                lookAt = eyePos - polarVector;
+
                 // If we are in arc-ball mode, do arc-ball based camera updates
                 if (m_ArcBallMode && (hasRotation || inputState.GetMouseAxisDelta(Mouse_Wheel)))
                 {
-                    // Modify Pitch/Yaw according to mouse input (prevent from hitting the max/min in pitch by 1 degree to prevent stuttering)
-                    m_Pitch = (std::max)(-CAULDRON_PI2 + DEG_TO_RAD(1), (std::min)(m_Pitch, CAULDRON_PI2 - DEG_TO_RAD(1)));
-
                     // Mouse wheel
                     float wheel = inputState.GetMouseAxisDelta(Mouse_Wheel) * displacementIncr / 3.f;
                     float distanceMod = m_Distance - wheel;
@@ -349,7 +350,6 @@ namespace cauldron
 
                     // Update everything
                     Vec4 dir = m_InvViewMatrix.getCol2();
-                    Vec4 polarVector = PolarToVector(m_Yaw, m_Pitch);
                     lookAt = eyePos - (dir * m_Distance);
 
                     eyePos = lookAt + (polarVector * distanceMod);
@@ -376,7 +376,7 @@ namespace cauldron
 
                     movement += Vec4(x, y, z, 0.f);
 
-                    Mat4& transform = m_pOwner->GetTransform();
+                    lookAt = eyePos - polarVector;
 
                     // Update from inputs
                     if (hasRotation || dot(movement.getXYZ(), movement.getXYZ()))

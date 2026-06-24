@@ -48,7 +48,6 @@ namespace cauldron
     CommandList* Device::BeginFrame()
     {
         // Clear the active command lists for this frame
-        uint8_t currentBufferIndex = GetFramework()->GetSwapChain()->GetBackBufferIndex();
         m_pActiveCommandList = CreateCommandList(L"DeviceGraphicsCmdList", CommandQueue::Graphics);
 
         // Set all resource view heaps for the frame

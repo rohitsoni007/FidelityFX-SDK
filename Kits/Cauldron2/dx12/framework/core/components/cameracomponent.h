@@ -225,7 +225,7 @@ namespace cauldron
         const Vec4 GetDirection() const { return m_InvViewMatrix.getCol2(); }
 
         /**
-         * @brief   Gets the camera's view matrix stored in row major order.
+         * @brief   Gets the camera's view matrix.
          */
         const Mat4& GetView() const { return m_ViewMatrix; }
 

@@ -50,15 +50,15 @@ namespace cauldron
         switch (desc.Dimension)
         {
         case TextureDimension::Texture1D:
-            resourceDesc = CD3DX12_RESOURCE_DESC::Tex1D(GetDXGIFormat(desc.Format), desc.Width, desc.DepthOrArraySize, desc.MipLevels, GetDXResourceFlags(desc.Flags));
+            resourceDesc = CD3DX12_RESOURCE_DESC::Tex1D(GetDXGIFormat(desc.Format), desc.Width, static_cast<UINT16>(desc.DepthOrArraySize), static_cast<UINT16>(desc.MipLevels), GetDXResourceFlags(desc.Flags));
             break;
         case TextureDimension::Texture3D:
-            resourceDesc = CD3DX12_RESOURCE_DESC::Tex3D(GetDXGIFormat(desc.Format), desc.Width, desc.Height, desc.DepthOrArraySize, desc.MipLevels, GetDXResourceFlags(desc.Flags));
+            resourceDesc = CD3DX12_RESOURCE_DESC::Tex3D(GetDXGIFormat(desc.Format), desc.Width, desc.Height, static_cast<UINT16>(desc.DepthOrArraySize), static_cast<UINT16>(desc.MipLevels), GetDXResourceFlags(desc.Flags));
             break;
         case TextureDimension::CubeMap:
         case TextureDimension::Texture2D:
         default:
-            resourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(GetDXGIFormat(desc.Format), desc.Width, desc.Height, desc.DepthOrArraySize, desc.MipLevels, 1, 0, GetDXResourceFlags(desc.Flags));
+            resourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(GetDXGIFormat(desc.Format), desc.Width, desc.Height, static_cast<UINT16>(desc.DepthOrArraySize), static_cast<UINT16>(desc.MipLevels), 1, 0, GetDXResourceFlags(desc.Flags));
             break;
         }
 
@@ -101,7 +101,7 @@ namespace cauldron
         UINT64 rowSizesInBytes[D3D12_REQ_MIP_LEVELS] = { 0 };
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedTex2D[D3D12_REQ_MIP_LEVELS];
         DXGI_FORMAT dxFormat = GetDXGIFormat(m_TextureDesc.Format);
-        CD3DX12_RESOURCE_DESC rDescs = CD3DX12_RESOURCE_DESC::Tex2D(dxFormat, m_TextureDesc.Width, m_TextureDesc.Height, 1, m_TextureDesc.MipLevels);
+        CD3DX12_RESOURCE_DESC rDescs = CD3DX12_RESOURCE_DESC::Tex2D(dxFormat, m_TextureDesc.Width, m_TextureDesc.Height, 1, static_cast<UINT16>(m_TextureDesc.MipLevels));
         GetDevice()->GetImpl()->DX12Device()->GetCopyableFootprints(&rDescs, 0, m_TextureDesc.MipLevels, 0, placedTex2D, numRows, rowSizesInBytes, &uplHeapSize);
 
         // Compute the pixel size

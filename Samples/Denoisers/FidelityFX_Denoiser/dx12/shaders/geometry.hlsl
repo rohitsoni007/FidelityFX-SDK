@@ -53,7 +53,7 @@ uint3 FetchFaceIndicesU16(StructuredBuffer<uint> indexBuffers[], in uint bufferI
     uint u1 = indexBuffers[NonUniformResourceIndex(bufferIndex)].Load(dword_id_1);
     u1      = (u1 >> shift_1) & 0xffffu;
     uint u2 = indexBuffers[NonUniformResourceIndex(bufferIndex)].Load(dword_id_2);
-    u2      = (u2 >> shift_0) & 0xffffu;
+    u2      = (u2 >> shift_2) & 0xffffu;
     return uint3(u0, u1, u2);
 }
 

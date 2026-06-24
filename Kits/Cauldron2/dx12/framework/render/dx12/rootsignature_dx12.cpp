@@ -46,13 +46,13 @@ namespace cauldron
 
     }
 
-    void RootSignatureInternal::Build(const RootSignatureDesc& desc)
+    void RootSignatureInternal::Build(const RootSignatureDesc& rootSigDesc)
     {
-        m_PipelineType = desc.GetPipelineType();
+        m_PipelineType = rootSigDesc.GetPipelineType();
 
         // build the root parameters
-        const std::vector<RootParameter>& parameters = desc.m_pSignatureDescImpl->m_RootParameters;
-        const std::vector<CD3DX12_DESCRIPTOR_RANGE>& ranges = desc.m_pSignatureDescImpl->m_DescRanges;
+        const std::vector<RootParameter>& parameters = rootSigDesc.m_pSignatureDescImpl->m_RootParameters;
+        const std::vector<CD3DX12_DESCRIPTOR_RANGE>& ranges = rootSigDesc.m_pSignatureDescImpl->m_DescRanges;
 
         // We are going to remap the order of parameters to what as defined to make it easier to find later
         // This means we need to remap initial values to new ones
@@ -257,8 +257,8 @@ namespace cauldron
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = CD3DX12_ROOT_SIGNATURE_DESC();
         rootSignatureDesc.NumParameters = static_cast<UINT>(rootParameters.size());
         rootSignatureDesc.pParameters = rootParameters.data();
-        rootSignatureDesc.NumStaticSamplers = static_cast<UINT>(desc.m_pSignatureDescImpl->m_StaticSamplers.size());
-        rootSignatureDesc.pStaticSamplers = desc.m_pSignatureDescImpl->m_StaticSamplers.data();
+        rootSignatureDesc.NumStaticSamplers = static_cast<UINT>(rootSigDesc.m_pSignatureDescImpl->m_StaticSamplers.size());
+        rootSignatureDesc.pStaticSamplers = rootSigDesc.m_pSignatureDescImpl->m_StaticSamplers.data();
 
         rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE
             | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT

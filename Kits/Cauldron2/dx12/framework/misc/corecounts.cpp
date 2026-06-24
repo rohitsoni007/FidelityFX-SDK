@@ -56,7 +56,6 @@ namespace cauldron
     void GetCPUDescription(std::wstring& cpuName)
     {
 #if defined(_WINDOWS) && (defined(_M_X64) || defined(_M_IX86))
-        int32_t nIDs = 0;
         int32_t nExIDs = 0;
 
         char strCPUName[0x40] = { };

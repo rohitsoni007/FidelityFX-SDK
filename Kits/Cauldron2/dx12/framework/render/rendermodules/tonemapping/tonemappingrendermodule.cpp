@@ -57,7 +57,7 @@ ToneMappingRenderModule::ToneMappingRenderModule(const wchar_t* pName) :
     GetFramework()->SetTonemapper(this);
 }
 
-void ToneMappingRenderModule::Init(const json& InitData)
+void ToneMappingRenderModule::Init(const json&)
 {
     // Get the proper pre-tone map color target
     m_pRenderTargetIn = GetFramework()->GetRenderTexture(L"HDR11Color");
@@ -159,8 +159,8 @@ void ToneMappingRenderModule::Init(const json& InitData)
         DefineList buildDistortionFieldDefineList;
         buildDistortionFieldDefineList.emplace(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX));
         buildDistortionFieldDefineList.emplace(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY));
-        ShaderBuildDesc computeDesc = ShaderBuildDesc::Compute(shaderPath.c_str(), L"MainCS", ShaderModel::SM6_0, &buildDistortionFieldDefineList);
-        buildDistortionFieldPsoDesc.AddShaderDesc(computeDesc);
+        ShaderBuildDesc distortionFieldDesc = ShaderBuildDesc::Compute(shaderPath.c_str(), L"MainCS", ShaderModel::SM6_0, &buildDistortionFieldDefineList);
+        buildDistortionFieldPsoDesc.AddShaderDesc(distortionFieldDesc);
 
         m_pBuildDistortionFieldPipelineObj = PipelineObject::CreatePipelineObject(L"BuildDistortionFieldRenderPass_PipelineObj", buildDistortionFieldPsoDesc);
 
@@ -212,7 +212,7 @@ void ToneMappingRenderModule::Init(const json& InitData)
             "Exposure",
             m_TonemapperConstantData.Exposure,
             0.f, 5.f,
-            [this](float cur, float old) {
+            [this](float cur, float) {
                 GetScene()->SetSceneExposure(cur);
             }
         );
@@ -242,7 +242,7 @@ ToneMappingRenderModule::~ToneMappingRenderModule()
     delete m_pTonemapperParameters;
 }
 
-void ToneMappingRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void ToneMappingRenderModule::Execute(double, CommandList* pCmdList)
 {
     // If display mode is set to FSHDR_SCRGB or HDR10_SCRGB, set default "Tone Mapper" GUI option value to "No Tonemapper"
     if (GetFramework()->GetSwapChain()->GetSwapChainDisplayMode() == DisplayMode::DISPLAYMODE_FSHDR_SCRGB ||
@@ -409,7 +409,7 @@ void ToneMappingRenderModule::SetDoubleBufferedTextureIndex(uint32_t textureInde
     m_curDoubleBufferedTextureIndex = textureIndex;
 }
 
-void ToneMappingRenderModule::OnResize(const cauldron::ResolutionInfo& resInfo)
+void ToneMappingRenderModule::OnResize(const cauldron::ResolutionInfo&)
 {
     if (!ModuleEnabled())
         return;

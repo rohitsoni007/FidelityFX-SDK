@@ -165,14 +165,14 @@ namespace cauldron
         if (m_pRandomTexture)
         {
             float* values = new float[1024 * 1024 * 4];
-            float* ptr    = values;
+            float* fPtr    = values;
             for (UINT i = 0; i < 1024 * 1024; i++)
             {
-                ptr[0] = RandomVariance(0.0f, 1.0f);
-                ptr[1] = RandomVariance(0.0f, 1.0f);
-                ptr[2] = RandomVariance(0.0f, 1.0f);
-                ptr[3] = RandomVariance(0.0f, 1.0f);
-                ptr += 4;
+                fPtr[0] = RandomVariance(0.0f, 1.0f);
+                fPtr[1] = RandomVariance(0.0f, 1.0f);
+                fPtr[2] = RandomVariance(0.0f, 1.0f);
+                fPtr[3] = RandomVariance(0.0f, 1.0f);
+                fPtr += 4;
             }
 
             MemTextureDataBlock dataBlock{ reinterpret_cast<char*>(values) };
@@ -180,9 +180,9 @@ namespace cauldron
             // Explicitly cast away const during data copy
             const_cast<Texture*>(m_pRandomTexture)->CopyData(&dataBlock);
             // Once done, auto-enqueue a barrier for start of next frame so it's usable
-            Barrier bufferTransition = Barrier::Transition(
+            Barrier bufferBarrier = Barrier::Transition(
                 m_pRandomTexture->GetResource(), ResourceState::CommonResource, ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource);
-            GetDevice()->ExecuteResourceTransitionImmediate(1, &bufferTransition);
+            GetDevice()->ExecuteResourceTransitionImmediate(1, &bufferBarrier);
             delete[] values;
         }
     }

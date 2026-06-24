@@ -39,7 +39,7 @@ using namespace std::experimental;
 constexpr uint32_t g_NumThreadX = 8;
 constexpr uint32_t g_NumThreadY = 8;
 
-void LightingRenderModule::Init(const json& initData)
+void LightingRenderModule::Init(const json&)
 {
     // Init resources
     m_pDiffuseTexture = GetFramework()->GetRenderTexture(L"GBufferAlbedoRT");
@@ -152,7 +152,7 @@ void LightingRenderModule::Init(const json& initData)
     {
         uiSection->RegisterUIElement<UISlider<float>>(
             "IBLFactor", m_IBLFactor, 0.0f, 1.0f,
-            [this](float cur, float old) {
+            [this](float cur, float) {
                 GetScene()->SetIBLFactor(cur);
             });
     }
@@ -168,7 +168,7 @@ LightingRenderModule::~LightingRenderModule()
     delete m_pParameters;
 }
 
-void LightingRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void LightingRenderModule::Execute(double, CommandList* pCmdList)
 {
     if(GetScene()->GetBRDFLutTexture())
     {

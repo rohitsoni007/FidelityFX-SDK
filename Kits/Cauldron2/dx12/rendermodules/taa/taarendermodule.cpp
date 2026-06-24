@@ -35,7 +35,7 @@ using namespace cauldron;
 // Used in a few places
 static uint32_t s_Seed;
 
-void TAARenderModule::Init(const json& initData)
+void TAARenderModule::Init(const json&)
 {
     CauldronAssert(
         ASSERT_CRITICAL, !GetFramework()->GetConfig()->MotionVectorGeneration.empty(), L"Error : TAARendermodule requires MotionVectorGeneration be set");
@@ -69,7 +69,7 @@ TAARenderModule::~TAARenderModule()
     delete m_pPostParameters;
 }
 
-void TAARenderModule::Execute(double deltaTime, cauldron::CommandList* pCmdList)
+void TAARenderModule::Execute(double, cauldron::CommandList* pCmdList)
 {
     if (!m_bEnableTaa)
     {
@@ -185,7 +185,7 @@ void TAARenderModule::EnableModule(bool enabled)
     m_UISection->Show(enabled);
 }
 
-void TAARenderModule::OnResize(const ResolutionInfo& resInfo)
+void TAARenderModule::OnResize(const ResolutionInfo&)
 {
     m_bFirst = true;
 }

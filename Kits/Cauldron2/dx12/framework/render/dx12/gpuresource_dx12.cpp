@@ -68,13 +68,10 @@ namespace
             return new GPUResourceInternal(pParams->pResource, resourceName, initialState, resizable);
         default:
             CauldronCritical(L"Unsupported GPUResourceType creation requested");
-            break;
         }
-
-        return nullptr;
     }
 
-    GPUResource* GPUResource::GetWrappedResourceFromSDK(const wchar_t* name, void* pSDKResource, const TextureDesc* pDesc, ResourceState initialState)
+    GPUResource* GPUResource::GetWrappedResourceFromSDK(const wchar_t* name, void* pSDKResource, const TextureDesc*, ResourceState initialState)
     {
         ID3D12Resource* pDX12SDKResource = (ID3D12Resource*)pSDKResource;
         pDX12SDKResource->AddRef();  // Deleting the resource will decrease the ref count, so make sure to up it here
@@ -98,7 +95,7 @@ namespace
         return pNewGPUResource;
     }
 
-    GPUResource* GPUResource::GetWrappedResourceFromSDK(const wchar_t* name, void* pSDKResource, const BufferDesc* pDesc, ResourceState initialState)
+    GPUResource* GPUResource::GetWrappedResourceFromSDK(const wchar_t* name, void* pSDKResource, const BufferDesc*, ResourceState initialState)
     {
         ID3D12Resource* pDX12SDKResource = (ID3D12Resource*)pSDKResource;
         pDX12SDKResource->AddRef();  // Deleting the resource will decrease the ref count, so make sure to up it here
@@ -350,7 +347,11 @@ namespace
             pClearValue = &clearValue;
         }
 
-        CauldronThrowOnFail(GetDevice()->GetImpl()->GetD3D12MemoryAllocator()->CreateResource(&allocationDesc, &m_ResourceDesc, GetDXResourceState(m_ResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER ? ResourceState::CommonResource : initialState),
+        if ((m_ResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) && (initialState != ResourceState::RTAccelerationStruct))
+        {
+            initialState = ResourceState::CommonResource;
+        }
+        CauldronThrowOnFail(GetDevice()->GetImpl()->GetD3D12MemoryAllocator()->CreateResource(&allocationDesc, &m_ResourceDesc, GetDXResourceState(initialState),
             pClearValue, &m_pAllocation, IID_PPV_ARGS(&m_pResource)));
 
         // And set a resource name
@@ -520,7 +521,6 @@ namespace
             return DXGI_FORMAT_BC7_UNORM_SRGB;
         default:
             CauldronCritical(L"Unsupported Format conversion requested.");
-            return DXGI_FORMAT_UNKNOWN;
         }
     }
 

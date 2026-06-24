@@ -1,15 +1,15 @@
 <!-- @page page_running-samples_index Running Samples -->
 
-<h1>Running the FSR™ SDK Samples</h1>
+<h1>Running the AMD FSR™ SDK Samples</h1>
 
 <h2>Content download</h2>
 
-The FSR™ SDK samples are configured to load scenes from pre-downloaded content. Please see the [media delivery tool](../tools/media-delivery.md)
+The AMD FSR™ SDK samples are configured to load scenes from pre-downloaded content. Please see the [media delivery tool](../tools/media-delivery.md)
 
 <h2>Configuration files</h2>
 
-The FSR™ SDK samples (and Cauldron Framework in general) operate via runtime setup driven by various JSON configuration files.
-*The FSR™ Radiance Caching Preview is run from a self contained application framework and not Cauldron-based.
+The AMD FSR™ SDK samples (and Cauldron Framework in general) operate via runtime setup driven by various JSON configuration files.
+*The AMD FSR™ Radiance Caching Preview is run from a self contained application framework and not Cauldron-based.
 
 There is a hierarchy to how the configuration files are loaded:
 
@@ -98,7 +98,7 @@ The following is a list of configuration groups and options that can be overload
 
   **DebugOptions**
   
-  Debug options are designed to be used by AMD engineers during the development of FSR features, but can also be useful when investigating how the sample runs or when experimenting.
+  Debug options are designed to be used by AMD engineers during the development of AMD FSR™ features, but can also be useful when investigating how the sample runs or when experimenting.
   
   `DevelopmentMode` will automatically enable debug shaders, CPU validation, and DirectX memory leak detection (when in DX12 configurations).
   
@@ -146,7 +146,7 @@ The following is a list of configuration groups and options that can be overload
   
   **RenderModuleOverrides**
   
-  Used to override data for render module initialization. Define an entry for each render module you wish to override. Example: Overiding [`SkyDomeRenderModule`](../../Kits/Cauldron2/dx12/rendermodules/skydome/skydomerendermodule.h)'s procedural generation setting:
+  Used to override data for render module initialization. Define an entry for each render module you wish to override. Example: Overriding [`SkyDomeRenderModule`](../../Kits/Cauldron2/dx12/rendermodules/skydome/skydomerendermodule.h)'s procedural generation setting:
   
   ```yaml
   "RenderModuleOverrides": {

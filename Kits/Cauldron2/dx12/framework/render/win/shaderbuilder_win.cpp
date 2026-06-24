@@ -364,7 +364,6 @@ namespace cauldron
         std::wstring fullCompilerPath = L"dxcompiler.dll";
         std::wstring fullDXILPath = L"dxil.dll";
 
-        HMODULE hDXILModule = ::LoadLibraryW(fullDXILPath.c_str());
         HMODULE hDXCModule = ::LoadLibraryW(fullCompilerPath.c_str());
 
         g_DXCCreateFunc = (DxcCreateInstanceProc)::GetProcAddress(hDXCModule, "DxcCreateInstance");

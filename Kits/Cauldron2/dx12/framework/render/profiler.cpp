@@ -152,7 +152,7 @@ namespace cauldron
             EndFrameGPU(pCmdList);
     }
 
-    void Profiler::EndFrameGPU(CommandList* pCmdList)
+    void Profiler::EndFrameGPU(CommandList*)
     {
         // Save the number of events of this frame
         m_GPUTimeStampCounts[m_CurrentFrame] = m_TimeStampCount;

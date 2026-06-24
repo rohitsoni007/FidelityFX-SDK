@@ -1,8 +1,8 @@
-<!-- @page page_building-samples_index Generating solutions for the FSR™ SDK -->
+<!-- @page page_building-samples_index Generating solutions for the AMD FSR™ SDK -->
 
-<h1>Building FSR™ SDK Samples</h1>
+<h1>Building AMD FSR™ SDK Samples</h1>
 
-<h2>Visual Studio solutions for the FSR™ SDK</h2>
+<h2>Visual Studio solutions for the AMD FSR™ SDK</h2>
 
 To build the samples in the AMD FSR™ SDK:
 

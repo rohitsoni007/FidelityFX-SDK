@@ -29,7 +29,7 @@
 
 namespace cauldron
 {
-    Component::Component(Entity* pOwner, ComponentData* pData, ComponentMgr* pManager)
+    Component::Component(Entity* pOwner, ComponentData*, ComponentMgr* pManager)
         : m_pOwner{ pOwner }
         , m_pManager{ pManager }
     {

@@ -413,8 +413,8 @@ void ParallelSort::Execute(cauldron::CommandList* pCmdList, NumKeys numKeysToSor
     ParallelSortConstants constants;
     memset(&constants, 0, sizeof(ParallelSortConstants));
 
-    uint32_t numThreadGroupsToRun;
-    uint32_t numReducedThreadGroupsToRun;
+    uint32_t numThreadGroupsToRun = 0;
+    uint32_t numReducedThreadGroupsToRun = 0;
 
     if (!m_bIndirect)
     {

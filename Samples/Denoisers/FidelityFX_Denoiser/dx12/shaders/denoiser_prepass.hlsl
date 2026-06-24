@@ -26,11 +26,13 @@ Texture2D<float> g_DepthTarget : register(t0);
 
 RWTexture2D<float> g_LinearDepth : register(u0);
 
-RWTexture2D<float4> g_DenoisedDirectDiffuse : register(u1);
-RWTexture2D<float4> g_DenoisedDirectSpecular : register(u2);
-RWTexture2D<float4> g_DenoisedIndirectDiffuse : register(u3);
-RWTexture2D<float4> g_DenoisedIndirectSpecular : register(u4);
-RWTexture2D<float4> g_DenoisedDominantLightVisibility : register(u5);
+RWTexture2D<float4> g_DenoisedDirectDiffuse           : register(u1);
+RWTexture2D<float4> g_DenoisedDirectSpecular          : register(u2);
+RWTexture2D<float4> g_DenoisedIndirectDiffuse         : register(u3);
+RWTexture2D<float4> g_DenoisedIndirectSpecular        : register(u4);
+RWTexture2D<float>  g_DenoisedDominantLightVisibility : register(u5);
+RWTexture2D<float>  g_DenoisedAmbientOcclusion        : register(u6);
+RWTexture2D<float>  g_DenoisedSpecularOcclusion       : register(u7);
 
 cbuffer Constants : register(b0)
 {
@@ -53,8 +55,8 @@ void main(uint3 dtid : SV_DispatchThreadID)
     const float3 screenUVW    = float3((float2(pixel) + 0.5f) / float2(g_RenderWidth, g_RenderHeight), depth);
     const float3 viewSpacePos = ScreenSpaceToViewSpace(screenUVW, g_ClipToCamera);
 
-    // Absolute linear depth
-    g_LinearDepth[pixel] = abs(viewSpacePos.z);
+    // Signed linear depth
+    g_LinearDepth[pixel] = viewSpacePos.z;
     
     // clear outputs to validate that history is kept by denoiser internally
     g_DenoisedDirectDiffuse[pixel]           = 0.0f;
@@ -62,4 +64,6 @@ void main(uint3 dtid : SV_DispatchThreadID)
     g_DenoisedIndirectDiffuse[pixel]         = 0.0f;
     g_DenoisedIndirectSpecular[pixel]        = 0.0f;
     g_DenoisedDominantLightVisibility[pixel] = 0.0f;
+    g_DenoisedAmbientOcclusion[pixel]        = 0.0f;
+    g_DenoisedSpecularOcclusion[pixel]       = 0.0f;
 }

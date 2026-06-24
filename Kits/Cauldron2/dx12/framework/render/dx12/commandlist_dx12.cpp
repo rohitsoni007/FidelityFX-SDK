@@ -376,7 +376,7 @@ namespace cauldron
         pCmdList->GetImpl()->DX12CmdList()->WriteBufferImmediate(numParams, params.data(), nullptr);
     }
 
-    void WriteBreadcrumbsMarker(Device* pDevice, CommandList* pCmdList, Buffer* pBuffer, uint64_t gpuAddress, uint32_t value, bool isBegin)
+    void WriteBreadcrumbsMarker(Device*, CommandList* pCmdList, Buffer*, uint64_t gpuAddress, uint32_t value, bool isBegin)
     {
         const D3D12_WRITEBUFFERIMMEDIATE_MODE mode = isBegin ? D3D12_WRITEBUFFERIMMEDIATE_MODE_MARKER_IN : D3D12_WRITEBUFFERIMMEDIATE_MODE_MARKER_OUT;
         const D3D12_WRITEBUFFERIMMEDIATE_PARAMETER params = { gpuAddress, value };

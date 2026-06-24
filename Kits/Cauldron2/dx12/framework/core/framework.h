@@ -241,7 +241,7 @@ namespace cauldron
         } StartupContent;
 
         // Perf Output
-        uint32_t                      BenchmarkFrameDuration = -1;
+        uint32_t                      BenchmarkFrameDuration = static_cast<uint32_t>(-1);
         std::wstring                  BenchmarkPath = L"";
         float                         BenchmarkDeviationFilterFactor = 1.0f;
 
@@ -403,7 +403,7 @@ namespace cauldron
         /**
          * @brief   ParseSampleCmdLine(). Override in sample to modify application configuration.
          */
-        virtual void ParseSampleCmdLine(const wchar_t* cmdLine) { }
+        virtual void ParseSampleCmdLine(const wchar_t*) { }
 
         /**
          * @brief   RegisterSampleModules(). Override in sample to 
@@ -419,12 +419,12 @@ namespace cauldron
         /**
          * @brief   DoSampleUpdates(). Override in sample to perform additional sample updates.
          */
-        virtual void DoSampleUpdates(double deltaTime) {}
+        virtual void DoSampleUpdates(double) {}
 
         /**
          * @brief   DoSampleResize(). Override in sample to handle application resize changes.
          */
-        virtual void DoSampleResize(const ResolutionInfo& resInfo) {}
+        virtual void DoSampleResize(const ResolutionInfo&) {}
 
         /**
          * @brief   DoSampleShutdown(). Override in sample to modify application shutdown.
@@ -792,8 +792,8 @@ namespace cauldron
         std::chrono::time_point<std::chrono::system_clock> m_LoadingStartTime;
         std::chrono::time_point<std::chrono::system_clock> m_LastFrameTime;
         double                  m_DeltaTime = 0.0;
-        uint64_t                m_FrameID   = -1;               // Start at -1 so that the first frame is 0 (as we increment on begin frame)
-        CommandList*            m_pCmdListForFrame = nullptr;  // Valid between Begin/EndFrame only
+        uint64_t                m_FrameID   = static_cast<uint64_t>(-1); // Start at -1 so that the first frame is 0 (as we increment on begin frame)
+        CommandList*            m_pCmdListForFrame = nullptr;            // Valid between Begin/EndFrame only
 
         CommandList*                                       m_pDeviceCmdListForFrame = nullptr;    // Valid between Begin/EndFrame only
         std::vector<CommandList*>                          m_vecCmdListsForFrame;                 // Valid between Begin/EndFrame only

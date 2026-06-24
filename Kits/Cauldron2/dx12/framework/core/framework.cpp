@@ -269,7 +269,7 @@ namespace cauldron
         {
             Log::Write(LOGLEVEL_TRACE, L"Initializing WinPixGpuCapturer.");
             HMODULE mod = ::PIXLoadLatestWinPixGpuCapturerLibrary();
-            assert(mod);
+            CAULDRON_ASSERT(mod);
         }
 
         // Initialize the device, resource allocator, and swap chain
@@ -988,8 +988,6 @@ namespace cauldron
 
                 for (auto it = renderModuleList.begin(); it != renderModuleList.end(); ++it)
                 {
-                    const json& renderModuleData = *it;
-
                     RenderModuleInfo rmInfo;
                     rmInfo.Name = it.value();
 
@@ -1004,7 +1002,7 @@ namespace cauldron
 
                     // Lowercase rendermodule name
                     std::string lowerCaseRMConfigName = rmInfo.Name;
-                    std::transform(rmInfo.Name.begin(), rmInfo.Name.end(), lowerCaseRMConfigName.begin(), [](unsigned char c) { return std::tolower(c); });
+                    std::transform(rmInfo.Name.begin(), rmInfo.Name.end(), lowerCaseRMConfigName.begin(), [](unsigned char c) { return std::tolower(c, std::locale()); });
 
                     const auto configPath = filesystem::path("configs\\rm_configs\\" + lowerCaseRMConfigName + ".json");
                     if (filesystem::exists(configPath))
@@ -1013,12 +1011,12 @@ namespace cauldron
                         CauldronAssert(ASSERT_CRITICAL, ParseJsonFile(configPath.c_str(), rmConfigData), L"Could not parse JSON file %ls", rmInfo.Name.c_str());
 
                         // Get the sample configuration
-                        json configData = rmConfigData[rmInfo.Name];
+                        json jConfigData = rmConfigData[rmInfo.Name];
 
                         // Let the framework parse all the known options for us
                         const std::string logMessage("Parsing config file for " + rmInfo.Name);
                         Log::Write(LOGLEVEL_TRACE, std::wstring(logMessage.begin(), logMessage.end()).c_str());
-                        ParseConfigData(configData);
+                        ParseConfigData(jConfigData);
                     }
                     else
                     {
@@ -1896,7 +1894,7 @@ namespace cauldron
         }
     }
 
-    const Texture* Framework::GetColorTargetForCallback(const wchar_t* callbackOrModuleName)
+    const Texture* Framework::GetColorTargetForCallback(const wchar_t*)
     {
         CauldronAssert(ASSERT_WARNING, !IsRunning(), L"GetColorTargetForCallback is intended to be called during initialization phase. Calling this function at runtime can have performance implications.");
         return GetRenderTexture(L"HDR11Color");
@@ -2043,12 +2041,12 @@ namespace cauldron
                 desc.Height = m_ResolutionInfo.RenderHeight;
 
                 const Texture* pRenderTarget = m_pDynamicResourcePool->CreateRenderTexture(
-                    &desc, [](TextureDesc& desc, uint32_t displayWidth, uint32_t displayHeight, uint32_t renderingWidth, uint32_t renderingHeight) {
+                    &desc, [](TextureDesc& desc, uint32_t, uint32_t, uint32_t renderingWidth, uint32_t renderingHeight) {
                         desc.Width  = renderingWidth;
                         desc.Height = renderingHeight;
                     });
 
-                CauldronAssert(ASSERT_ERROR, pRenderTarget, L"Could not create render target %ls", iter->first);
+                CauldronAssert(ASSERT_ERROR, pRenderTarget, L"Could not create render target %ls", iter->first.c_str());
                 if (!pRenderTarget)
                     return -1;
             }
@@ -2056,12 +2054,12 @@ namespace cauldron
             {
                 // Always use full display width/height for resizing of auto-resources. We can control what viewport to use with the frame work
                 const Texture* pRenderTarget = m_pDynamicResourcePool->CreateRenderTexture(
-                    &desc, [](TextureDesc& desc, uint32_t displayWidth, uint32_t displayHeight, uint32_t renderingWidth, uint32_t renderingHeight) {
+                    &desc, [](TextureDesc& desc, uint32_t displayWidth, uint32_t displayHeight, uint32_t, uint32_t) {
                         desc.Width  = displayWidth;
                         desc.Height = displayHeight;
                     });
 
-                CauldronAssert(ASSERT_ERROR, pRenderTarget, L"Could not create render target %ls", iter->first);
+                CauldronAssert(ASSERT_ERROR, pRenderTarget, L"Could not create render target %ls", iter->first.c_str());
                 if (!pRenderTarget)
                     return -1;
             }
@@ -2075,12 +2073,12 @@ namespace cauldron
         uiTextureDesc.MipLevels = 1;
         uiTextureDesc.Flags = ResourceFlags::AllowUnorderedAccess | ResourceFlags::AllowRenderTarget;
 
-        DynamicResourcePool::TextureResizeFunction resizeFunc = [](TextureDesc& desc, uint32_t displayWidth, uint32_t displayHeight, uint32_t renderingWidth, uint32_t renderingHeight) {
+        DynamicResourcePool::TextureResizeFunction resizeFunc = [](TextureDesc& desc, uint32_t displayWidth, uint32_t displayHeight, uint32_t, uint32_t) {
             desc.Width = displayWidth;
             desc.Height = displayHeight;
             };
 
-        const wchar_t* const uiTexNames[] = { L"SwapChainProxy", L"UITarget0", L"UITarget1" };
+        const wchar_t* const uiTexNames[] = { L"SwapChainProxy", L"UITarget0", L"UITarget1", L"InterpolationOutput" };
         for (const auto texName : uiTexNames)
         {
             uiTextureDesc.Name = texName;

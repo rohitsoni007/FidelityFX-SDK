@@ -111,7 +111,7 @@ namespace cauldron
         CauldronCritical(L"Could not find %ls table containing requested slotIndex", bindName);
     }
 
-    void ParameterSetInternal::SetRootConstantBufferResource(const GPUResource* pResource, size_t size, uint32_t slotIndex)
+    void ParameterSetInternal::SetRootConstantBufferResource(const GPUResource*, size_t, uint32_t slotIndex)
     {
         // Reserve space for constant buffer entry
         if (static_cast<int32_t>(slotIndex) > static_cast<int32_t>(m_RootConstantBuffers.size() - 1))
@@ -137,7 +137,7 @@ namespace cauldron
 
     void ParameterSetInternal::SetAccelerationStructure(const TLAS* pTLAS, uint32_t slotIndex/*=0*/)
     {
-        BindBufferSRV(pTLAS->GetBuffer(), slotIndex, -1, -1, 0);
+        BindBufferSRV(pTLAS->GetBuffer(), slotIndex, static_cast<uint32_t>(-1), static_cast<uint32_t>(-1), 0);
     }
 
     void ParameterSetInternal::SetBufferUAV(const Buffer* pBuffer, uint32_t slotIndex/*=0*/, uint32_t firstElement/*=-1*/, uint32_t numElements/*=-1*/)
@@ -167,7 +167,7 @@ namespace cauldron
         m_Current32BitMemOffset += numEntries;
     }
 
-    void ParameterSetInternal::Bind(CommandList* pCmdList, const PipelineObject* pPipeline)
+    void ParameterSetInternal::Bind(CommandList* pCmdList, const PipelineObject*)
     {
 
         if (m_pRootSignature->GetPipelineType() == PipelineType::Graphics)

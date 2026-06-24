@@ -508,7 +508,7 @@ void FSRRenderModule::Execute(double deltaTime, CommandList* pCmdList)
         dispatchUpscale.sharpness = 0.8f;
 
         // Cauldron keeps time in seconds, but FSR expects milliseconds
-        dispatchUpscale.frameTimeDelta = static_cast<float>(deltaTime * 1000.f);
+        dispatchUpscale.frameTimeDelta = static_cast<float>(deltaTime * 1000.0);
 
         dispatchUpscale.preExposure = GetScene()->GetSceneExposure();
         dispatchUpscale.renderSize.width = resInfo.RenderWidth;

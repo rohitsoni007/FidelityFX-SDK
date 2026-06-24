@@ -73,7 +73,7 @@ namespace cauldron
     /// @returns            None.
     ///
     /// @ingroup CauldronAssert
-    inline void CauldronCritical(const wchar_t* format, ...)
+    [[noreturn]] inline void CauldronCritical(const wchar_t* format, ...)
     {
         // Format the message string
         wchar_t buffer[512];

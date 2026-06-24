@@ -2,17 +2,18 @@
 
 <h1>Introduction to the AMD FSR™ SDK</h1>
 
-The FSR™ SDK is a collection of heavily optimized effects (headers and DLLs) that can be used by developers to improve their DirectX®12 applications. The FSR SDK includes:
+The AMD FSR™ SDK is a collection of heavily optimized effects (headers and DLLs) that can be used by developers to improve their DirectX®12 applications. The AMD FSR™ SDK includes:
 
-- [FidelityFX Super Resolution 2.3.4](../../Kits/FidelityFX/docs/techniques/super-resolution-temporal.md)
-- [FidelityFX Super Resolution 3.1.5](../../Kits/FidelityFX/docs/techniques/super-resolution-upscaler.md)
-- [FSR™ Upscaling 4.1.0](../../Kits/FidelityFX/docs/techniques/super-resolution-ml.md)
-- [FidelityFX Frame Generation 3.1.6](../../Kits/FidelityFX/docs/techniques/frame-interpolation.md)
-- [FidelityFX Frame Generation Swapchain 3.1.6](../../Kits/FidelityFX/docs/techniques/frame-interpolation-swap-chain.md)
-- [FSR™ Frame Generation 4.0.0](../../Kits/FidelityFX/docs/techniques/frame-interpolation-ml.md)
-- [FSR™ Frame Generation Swapchain 4.0.0](../../Kits/FidelityFX/docs/techniques/frame-interpolation-swap-chain.md)
-- [FSR™ Ray Regeneration 1.1.0](../../Kits/FidelityFX/docs/techniques/denoising.md)
-- [FSR™ Radiance Caching (Technical Preview)](../../Kits/FidelityFX/docs/techniques/radiance-cache.md)
+- [AMD FidelityFX™ Super Resolution 2.3.4](../../Kits/FidelityFX/docs/techniques/super-resolution-temporal.md)
+- [AMD FidelityFX™ Super Resolution 3.1.5](../../Kits/FidelityFX/docs/techniques/super-resolution-upscaler.md)
+- [AMD FSR™ Upscaling 4.1.1](../../Kits/FidelityFX/docs/techniques/super-resolution-ml.md)
+- [AMD FidelityFX™ Super Resolution Frame Generation 3.1.6](../../Kits/FidelityFX/docs/techniques/frame-interpolation.md)
+- [AMD FidelityFX™ Super Resolution Frame Generation Swapchain 3.1.7](../../Kits/FidelityFX/docs/techniques/frame-interpolation-swap-chain.md)
+- [AMD FSR™ Frame Generation 4.0.1](../../Kits/FidelityFX/docs/techniques/frame-interpolation-ml.md)
+- [AMD FSR™ Ray Regeneration 1.2.0](../../Kits/FidelityFX/docs/techniques/denoising.md)
+- [AMD FSR™ Radiance Caching (Preview)](../../Kits/FidelityFX/docs/techniques/radiance-cache.md)
+
+For SDK-focused getting started material (API, structure, and naming guidelines), see the [AMD FSR™ SDK documentation](../../Kits/FidelityFX/docs/getting-started/index.md).
 
 <h2>Supported ecosystems</h2>
 
@@ -38,10 +39,10 @@ For more information on the license terms please refer to the [license](../licen
 
 We endeavour to keep the AMD FSR™ SDK updated with new features and bug fixes as often as we can, and perform compatibility and performance testing on a wide range of hardware.
 
-If you find an issue, or have a request for the FSR™ SDK, please consider opening an issue.
+If you find an issue, or have a request for the AMD FSR™ SDK, please consider opening an issue.
 
 <!-- - @subpage page_getting-started_sdk-structure "SDK Structure" -->
 <!-- - @subpage page_building-samples_index "Building the samples for the SDK" -->
 <!-- - @subpage page_running-samples_index "Running the samples for the SDK" -->
-<!-- - @subpage page_getting-started_naming-guidelines "FSR naming guidelines for game applications" -->
-<!-- - @subpage page_ffx-api "Introduction to FSR API" -->
+<!-- - @subpage page_getting-started_naming-guidelines "AMD FSR™ naming guidelines for game applications" -->
+<!-- - @subpage page_ffx-api "Introduction to AMD FSR™ API" -->

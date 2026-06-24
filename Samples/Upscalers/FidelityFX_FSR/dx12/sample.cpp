@@ -61,7 +61,7 @@ void Sample::ParseSampleConfig()
 #endif // defined(RenderModuleConfig)
 }
 
-void Sample::ParseSampleCmdLine(const wchar_t* cmdLine)
+void Sample::ParseSampleCmdLine(const wchar_t*)
 {
     // Process any command line parameters the sample looks for here
 }
@@ -84,7 +84,7 @@ void Sample::DoSampleInit()
 
 // Do any app-specific (global) updates here
 // This is called prior to components/render module updates
-void Sample::DoSampleUpdates(double deltaTime)
+void Sample::DoSampleUpdates(double)
 {
     const InputState& inputState = GetInputManager()->GetInputState();
     FSRApiRenderModule* pFSR = dynamic_cast<FSRApiRenderModule*>(GetFramework()->GetRenderModule("FSRApiRenderModule"));
@@ -98,9 +98,6 @@ void Sample::DoSampleUpdates(double deltaTime)
         // Scale preset hotkeys
         constexpr int32_t kScalePresetNativeAA = 0;
         constexpr int32_t kScalePresetQuality = 1;
-        constexpr int32_t kScalePresetBalanced = 2;
-        constexpr int32_t kScalePresetPerformance = 3;
-        constexpr int32_t kScalePresetUltraPerformance = 4;
         constexpr int32_t kScalePresetCount = 5;
 
         // Track FSR state - initialize to match the actual starting state from fsrapirendermodule.h
@@ -160,7 +157,7 @@ void Sample::DoSampleUpdates(double deltaTime)
 
 // Handle any changes that need to occur due to applicate resize
 // NOTE: Cauldron with auto-resize internal resources
-void Sample::DoSampleResize(const ResolutionInfo& resInfo)
+void Sample::DoSampleResize(const ResolutionInfo&)
 {
 
 }

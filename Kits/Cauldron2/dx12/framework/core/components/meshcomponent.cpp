@@ -73,7 +73,7 @@ namespace cauldron
     {
     }
 
-    void MeshComponent::Update(double deltaTime)
+    void MeshComponent::Update(double)
     {
         // Push a new ASInstance to the ASManager Instance Queue for later processing
         if (GetConfig()->BuildRayTracingAccelerationStructure)

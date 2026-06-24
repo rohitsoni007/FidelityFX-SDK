@@ -204,7 +204,7 @@ namespace cauldron
                 // if this node is in the target list of joints to be updated, update it
                 for (size_t i = 0; i < skin->m_jointsNodeIdx.size(); ++i)
                 {
-                    if (data->m_nodeId == skin->m_jointsNodeIdx[i])
+                    if (data->m_nodeId == static_cast<uint32_t>(skin->m_jointsNodeIdx[i]))
                     {
                         const Mat4* pM = (Mat4*)skin->m_InverseBindMatrices.Data.data();
                         m_skinningData[data->m_modelId].m_SkinningMatrices[skinIdx][i].Set(component->GetOwner()->GetTransform() * pM[i]);

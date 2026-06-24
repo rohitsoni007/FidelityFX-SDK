@@ -537,7 +537,7 @@ void SkyDomeRenderModule::TextureLoadComplete(const std::vector<const Texture*>&
     SetModuleReady(true);
 }
 
-void SkyDomeRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void SkyDomeRenderModule::Execute(double, CommandList* pCmdList)
 {
     GPUScopedProfileCapture skydomeMarker(pCmdList, L"SkyDome");
 

@@ -216,7 +216,7 @@ namespace cauldron
                 if (alpha > 255)
                     alpha = 255;
 
-                pPixel[3] = alpha;
+                pPixel[3] = static_cast<uint8_t>(alpha);
             }
         }
     }
@@ -320,7 +320,7 @@ namespace cauldron
         return true;
     }
 
-    void WICTextureDataBlock::CopyTextureData(void* pDest, uint32_t stride, uint32_t bytesWidth, uint32_t height, uint32_t readOffset)
+    void WICTextureDataBlock::CopyTextureData(void* pDest, uint32_t stride, uint32_t bytesWidth, uint32_t height, uint32_t)
     {
         for (uint32_t y = 0; y < height; ++y)
             memcpy((char*)pDest + y * stride, m_pData + y * bytesWidth, bytesWidth);
@@ -429,7 +429,6 @@ namespace cauldron
             return ResourceFormat::BC7_SRGB;
         default:
             CauldronCritical(L"Unsupported format detected in DXGIToResourceFormat(). Please file an issue for additional format support.");
-            return ResourceFormat::Unknown;
         }
     }
 
@@ -485,7 +484,7 @@ namespace cauldron
         delete m_pData;
     }
 
-    bool DDSTextureDataBlock::LoadTextureData(filesystem::path& textureFile, float alphaThreshold, TextureDesc& texDesc)
+    bool DDSTextureDataBlock::LoadTextureData(filesystem::path& textureFile, float, TextureDesc& texDesc)
     {
         typedef enum RESOURCE_DIMENSION
         {
@@ -518,7 +517,6 @@ namespace cauldron
         constexpr size_t c_HEADER_ALIGNMENT = alignof(uint32_t);
         constexpr int32_t c_HEADER_SIZE = 4 + sizeof(DDS_HEADER) + sizeof(DDS_HEADER_DXT10);
         alignas(c_HEADER_ALIGNMENT) char headerData[c_HEADER_SIZE];
-        uint32_t bytesRead = 0;
 
         int64_t sizeRead = ReadFilePartial(textureFile.c_str(), headerData, c_HEADER_SIZE);
         if (sizeRead != c_HEADER_SIZE)
@@ -618,7 +616,7 @@ namespace cauldron
         m_pData = nullptr;  // We don't own this data
     }
 
-    bool MemTextureDataBlock::LoadTextureData(filesystem::path& textureFile, float alphaThreshold, TextureDesc& texDesc)
+    bool MemTextureDataBlock::LoadTextureData(filesystem::path&, float, TextureDesc&)
     {
         CauldronError(L"MemTextureDataBlock does not support calls to LoadTextureData.");
         return false;

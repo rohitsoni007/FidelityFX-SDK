@@ -244,17 +244,16 @@ namespace cauldron
     {
         switch (resourceFormatID)
         {
-        case g_GLTFComponentType_Byte:          return 1;   // Byte
-        case g_GLTFComponentType_UnsignedByte:  return 1;   // Unsigned Byte
+        case g_GLTFComponentType_Byte:          return 1;  // Byte
+        case g_GLTFComponentType_UnsignedByte:  return 1;  // Unsigned Byte
         case g_GLTFComponentType_Short:         return 2;  // Short
         case g_GLTFComponentType_UnsignedShort: return 2;  // Unsigned Short
         case g_GLTFComponentType_Int:           return 4;  // Signed int
         case g_GLTFComponentType_UnsignedInt:   return 4;  // Unsigned int
-        case g_GLTFComponentType_Float:         return 4; // Float
+        case g_GLTFComponentType_Float:         return 4;  // Float
+        default:
+            CauldronCritical(L"Invalid GLtf componentType for accessor");
         }
-
-        CauldronCritical(L"Invalid GLtf componentType for accessor");
-        return 0;
     }
 
     uint32_t ResourceFormatDimension(const std::string& str)
@@ -270,7 +269,7 @@ namespace cauldron
         else if (str == "MAT4")
             return 4 * 4;
         else
-            return -1;
+            return static_cast<uint32_t>(-1);
     }
 
     AttributeFormat ResourceFormatType(const std::string& str)
@@ -300,7 +299,7 @@ namespace cauldron
         GetTaskManager()->AddTask(loadingTask);
     }
 
-    void GLTFLoader::LoadMultipleAsync(void* pLoadParams)
+    void GLTFLoader::LoadMultipleAsync(void*)
     {
         CauldronError(L"Multiple Async load of GLTF content not yet supported. Please file an issue to have it implemented.");
     }
@@ -488,10 +487,10 @@ namespace cauldron
                 for (size_t i = 0; i < images.size(); ++i)
                 {
                     const std::string& uriName = images[i]["uri"];
-                    filesystem::path filePath = filePathString + StringToWString(uriName);
+                    filesystem::path imagePath = filePathString + StringToWString(uriName);
 
                     // Push the load info
-                    texLoadInfo.emplace_back(filePath, textureSRGBMap[i]);
+                    texLoadInfo.emplace_back(imagePath, textureSRGBMap[i]);
                 }
 
                 // Load all the textures in the background
@@ -1223,12 +1222,8 @@ namespace cauldron
         const json& glTFData = *pBufferLoadParams->pGLTFData->pGLTFJsonData;
 
         const json& animations  = glTFData["animations"];
-        auto&       accessors   = glTFData["accessors"];
-        auto&       bufferViews = glTFData["bufferViews"];
-        auto&       buffers     = glTFData["buffers"];
 
         auto& channelsJson = animations[pBufferLoadParams->BufferIndex]["channels"];
-        auto& samplersJson = animations[pBufferLoadParams->BufferIndex]["samplers"];
 
         pBufferLoadParams->pGLTFData->pLoadedContentRep->Animations[pBufferLoadParams->BufferIndex] = new Animation();
 
@@ -1271,7 +1266,7 @@ namespace cauldron
 
         GetBufferDetails(skinEntry["inverseBindMatrices"].get<int>(), &skin->m_InverseBindMatrices, pBufferLoadParams);
 
-        skin->m_skeletonId = -1;
+        skin->m_skeletonId = static_cast<uint32_t>(-1);
         auto skeletonIt    = skinEntry.find("skeleton");
         if (skeletonIt != skinEntry.end())
             skin->m_skeletonId = skinEntry["skeleton"].get<int>();

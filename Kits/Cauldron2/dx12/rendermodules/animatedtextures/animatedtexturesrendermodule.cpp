@@ -43,7 +43,7 @@ struct ConstantBufferData
     float pad[3];
 };
 
-void AnimatedTexturesRenderModule::Init(const json& initData)
+void AnimatedTexturesRenderModule::Init(const json&)
 {
     // Root signature
     RootSignatureDesc signatureDesc;
@@ -95,6 +95,8 @@ void AnimatedTexturesRenderModule::Init(const json& initData)
     // Setup remaining information and build
     DepthDesc depthDesc{};
     depthDesc.DepthEnable = true;
+    depthDesc.StencilEnable = false;
+    depthDesc.DepthWriteEnable = true;
     depthDesc.DepthFunc = ComparisonFunc::LessEqual;
     psoDesc.AddDepthState(&depthDesc);  // Use defaults
 
@@ -103,7 +105,7 @@ void AnimatedTexturesRenderModule::Init(const json& initData)
     psoDesc.AddRasterStateDescription(&rasterDesc);
     psoDesc.AddPrimitiveTopology(PrimitiveTopologyType::Triangle);
     psoDesc.AddRasterFormats({m_pRenderTarget->GetFormat(), m_pMotionVectors->GetFormat(), m_pReactiveMask->GetFormat(), m_pCompositionMask->GetFormat()},
-                             ResourceFormat::D32_FLOAT);
+                             m_pDepthTarget->GetFormat());
 
     m_pPipelineObj = PipelineObject::CreatePipelineObject(L"AnimatedTextures_PipelineObj", psoDesc);
 

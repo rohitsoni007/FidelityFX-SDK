@@ -113,7 +113,7 @@ RasterShadowRenderModule::~RasterShadowRenderModule()
     m_ShadowMapInfos.clear();
 }
 
-void RasterShadowRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void RasterShadowRenderModule::Execute(double, CommandList* pCmdList)
 {
     GPUScopedProfileCapture rasterShadowMapMarker(pCmdList, L"RasterShadow");
 
@@ -761,7 +761,7 @@ void RasterShadowRenderModule::UpdateUIState(bool hasDirectional)
             m_NumCascades,
             1, 4,
             enabled,
-            [this](int32_t cur, int32_t old) {
+            [this](int32_t, int32_t) {
                 for (int i = 0; i < _countof(m_CascadeSplitPointsEnabled); ++i)
                     m_CascadeSplitPointsEnabled[i] = (m_NumCascades > i + 1);
                 UpdateCascades();
@@ -773,28 +773,28 @@ void RasterShadowRenderModule::UpdateUIState(bool hasDirectional)
             m_CascadeSplitPoints[0],
             0.0f, 100.0f,
             m_CascadeSplitPointsEnabled[0],
-            [this](float cur, float old) { UpdateCascades(); },
+            [this](float, float) { UpdateCascades(); },
             true, false, "%.2f%%");
         m_UISection->RegisterUIElement<UISlider<float>>(
             "Cascade Split Points 1",
             m_CascadeSplitPoints[1],
             0.0f, 100.0f,
             m_CascadeSplitPointsEnabled[1],
-            [this](float cur, float old) { UpdateCascades(); },
+            [this](float, float) { UpdateCascades(); },
             true, false, "%.2f%%");
         m_UISection->RegisterUIElement<UISlider<float>>(
             "Cascade Split Points 2",
             m_CascadeSplitPoints[2],
             0.0f, 100.0f,
             m_CascadeSplitPointsEnabled[2],
-            [this](float cur, float old) { UpdateCascades(); },
+            [this](float, float) { UpdateCascades(); },
             true, false, "%.2f%%");
 
         // bMoveLightTexelSize
         m_UISection->RegisterUIElement<UICheckBox>(
             "Camera Pixel Align",
             m_MoveLightTexelSize,
-            [this](bool cur, bool old) {
+            [this](bool, bool) {
                 for (int i = 0; i < _countof(m_CascadeSplitPointsEnabled); ++i)
                     m_CascadeSplitPointsEnabled[i] = (m_NumCascades > i + 1);
                 UpdateCascades();

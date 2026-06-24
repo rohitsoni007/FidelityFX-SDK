@@ -90,7 +90,7 @@ namespace cauldron
         {
             // Load all IBL and BRDF data for scene
             TextureLoadCompletionCallbackFn CompletionCallback =
-                [this](const std::vector<const Texture*>& textures, void* additionalParams = nullptr)
+                [this](const std::vector<const Texture*>& textures, void*)
             {
                 if (!GetScene()->GetIBLTexture(IBLTexture::Prefiltered))
                     GetScene()->SetIBLTexture(textures[0], IBLTexture::Prefiltered);
@@ -186,7 +186,7 @@ namespace cauldron
         m_SceneEntities.clear();
     }
 
-    void Scene::UpdateScene(double deltaTime)
+    void Scene::UpdateScene(double)
     {
         // If we have more than 1 light component, set the default light to off
         if (LightComponentMgr::Get()->GetComponentCount() > 1 && m_pDefaultLight->IsActive())
@@ -210,8 +210,6 @@ namespace cauldron
         m_SceneInformation.CameraInfo.CameraPos = Vec4(m_pCurrentCamera->GetOwner()->GetTransform().getTranslation(), 0.f);
 
         // Update Upscaler Info
-        UpscalerState    upscaleState = GetFramework()->GetUpscalingState();
-        const ResolutionInfo& resInfo = GetFramework()->GetResolutionInfo();
         uint32_t rtWidth, rtHeight;
         float    widthScale, heightScale;
         GetFramework()->GetUpscaledRenderInfo(rtWidth, rtHeight, widthScale, heightScale);
@@ -316,7 +314,6 @@ namespace cauldron
 
     void Scene::UpdateSceneBoundingBox(const ContentBlock* pContentBlock)
     {
-        const MeshComponentMgr* pMeshComponentManager = MeshComponentMgr::Get();
         for (auto pEntityBlock : pContentBlock->EntityDataBlocks)
         {
             UpdateSceneBoundingBox(pEntityBlock->pEntity);
@@ -359,7 +356,6 @@ namespace cauldron
         // update all so reset the bounding box
         m_BoundingBox.Reset();
 
-        const MeshComponentMgr* pMeshComponentManager = MeshComponentMgr::Get();
         for (auto pEntity : m_SceneEntities)
         {
             UpdateSceneBoundingBox(pEntity);

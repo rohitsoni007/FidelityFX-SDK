@@ -107,7 +107,7 @@ struct PTSurfaceInfo
 
 struct TraceRaysConstants
 {
-#if __cplusplus
+#ifdef __cplusplus
     float clip_to_world[16];
     float camera_to_world[16];
 
@@ -115,10 +115,15 @@ struct TraceRaysConstants
     uint32_t frame_index;
     float ibl_factor;
 
-    uint32_t fuse_mode;
     uint32_t use_dominant_light;
     uint32_t dominant_light_index;
-    uint32_t pad;
+    uint32_t checkerboard;
+    uint32_t padding;
+
+    float ambientOcclusionA;
+    float ambientOcclusionB;
+    float specularOcclusionA;
+    float specularOcclusionB;
 #else // __cplusplus
     float4x4 clip_to_world;
     float4x4 camera_to_world;
@@ -127,10 +132,15 @@ struct TraceRaysConstants
     uint frame_index;
     float ibl_factor;
 
-    uint fuse_mode;
     uint use_dominant_light;
-    uint32_t dominant_light_index;
-    uint pad;
+    uint dominant_light_index;
+    uint checkerboard;
+    uint padding;
+
+    float ambientOcclusionA;
+    float ambientOcclusionB;
+    float specularOcclusionA;
+    float specularOcclusionB;
 #endif // __cplusplus
 };
 

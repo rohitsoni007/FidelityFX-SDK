@@ -149,7 +149,7 @@ namespace cauldron
 
     }
 
-    void LightComponent::Update(double deltaTime)
+    void LightComponent::Update(double)
     {
         if (m_pOwner->IsActive())
         {

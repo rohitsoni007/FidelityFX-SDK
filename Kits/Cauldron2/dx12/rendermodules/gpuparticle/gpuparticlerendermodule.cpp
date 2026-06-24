@@ -41,7 +41,7 @@ inline int align(int value, int alignment)
     return (value + (alignment - 1)) & ~(alignment - 1);
 }
 
-void GPUParticleRenderModule::Init(const json& initData)
+void GPUParticleRenderModule::Init(const json&)
 {
     m_pDepthBuffer = GetFramework()->GetRenderTexture(L"DepthTarget");
 
@@ -308,7 +308,7 @@ void GPUParticleRenderModule::Execute(double deltaTime, CommandList* pCmdList, P
     pParticleSystem->m_RenderReady.store(true);
 }
 
-void GPUParticleRenderModule::PreTransCallback(double deltaTime, cauldron::CommandList* pCmdList)
+void GPUParticleRenderModule::PreTransCallback(double, cauldron::CommandList* pCmdList)
 {
     const std::vector<Component*>& particleComponents = ParticleSpawnerComponentMgr::Get()->GetComponentList();
     if (particleComponents.empty())
@@ -408,7 +408,7 @@ void GPUParticleRenderModule::Emit(CommandList* pCmdList, ParticleSystem* pParti
 }
 
 // Per-frame simulation step
-void GPUParticleRenderModule::Simulate(CommandList* pCmdList, ParticleSystem* pParticleSystem)
+void GPUParticleRenderModule::Simulate(CommandList* pCmdList, ParticleSystem*)
 {
     SetPipelineState(pCmdList, m_pSimulatePipelineObj);
     Dispatch(pCmdList, align(g_maxParticles, 256) / 256, 1, 1);

@@ -187,7 +187,7 @@ namespace cauldron
         struct Content
         {
             ContentBlockState   State = ContentBlockState::Loading;
-            uint64_t            FrameStamp = -1;
+            uint64_t            FrameStamp = static_cast<uint64_t>(-1);
             ContentBlock*       pBlock = nullptr;
 
             Content() = default;

@@ -57,7 +57,7 @@ namespace cauldron
         /**
          * @brief   Rendermodule initialization function. This is where all setup code needs to happen.
          */
-        virtual void Init(const json& initData) {}
+        virtual void Init(const json&) {}
 
         /**
          * @brief   Sets the enabled state of the render module.
@@ -67,7 +67,7 @@ namespace cauldron
         /**
          * @brief   Update the render module UI before Execution.
          */
-        virtual void UpdateUI(double deltaTime) {};
+        virtual void UpdateUI(double) {};
 
         /**
          * @brief   Executes the render module.
@@ -77,7 +77,7 @@ namespace cauldron
         /**
          * @brief   Callback used when OnResize events occur.
          */
-        virtual void OnResize(const ResolutionInfo& resInfo) {}
+        virtual void OnResize(const ResolutionInfo&) {}
 
         /**
          * @brief   Callback used when OnFocusLost events occur.

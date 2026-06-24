@@ -120,7 +120,7 @@ namespace cauldron
         return true;
     }
 
-    uint32_t ProfilerInternal::RetrieveTimeStamps(CommandList* pCmdList, uint64_t* pQueries, size_t maxCount, uint32_t numTimeStamps)
+    uint32_t ProfilerInternal::RetrieveTimeStamps(CommandList*, uint64_t* pQueries, size_t, uint32_t numTimeStamps)
     {
         CauldronAssert(ASSERT_CRITICAL, pQueries != nullptr, L"Invalid queries buffer");
         if (numTimeStamps > 0)

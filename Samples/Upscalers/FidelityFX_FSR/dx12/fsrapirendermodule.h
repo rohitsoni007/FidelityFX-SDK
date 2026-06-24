@@ -327,12 +327,17 @@ private:
     bool     s_enableSoftwareMotionEstimation = true;
     int32_t  s_uiRenderMode      = UICompositionMode::UiCallback;
     int32_t  s_uiRenderModeNextFrame = UICompositionMode::UiCallback; // needs to be in-sync with s_uiRenderMode after deviating at most 1 frame.
+    int32_t  s_uiRenderModeAtDeactivation = UICompositionMode::UiCallback; // used to restore last Mode at reactivation of swapchain.
+    bool     m_FrameInterpolationAtSwapchainDeactivation = true; // used to restore FI state at reactivation of swapchain.
 
     // Surfaces for different UI render modes
     uint32_t                 m_curUiTextureIndex  = 0;
     const cauldron::Texture* m_pUiTexture[2]      = {};
     const cauldron::Texture* m_pHudLessTexture[2] = {};
     const cauldron::Texture* m_pDistortionField[2] = {};
+
+    //surface interpolation output for DXGI swapchain
+    const cauldron::Texture* m_pInterpolationOutput = nullptr;
 
     TAARenderModule*          m_pTAARenderModule         = nullptr;
     ToneMappingRenderModule*  m_pToneMappingRenderModule = nullptr;

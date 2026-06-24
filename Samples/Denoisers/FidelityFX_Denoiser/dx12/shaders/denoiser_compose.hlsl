@@ -27,14 +27,13 @@ Texture2D<float4> g_DirectDiffuse : register(t0);
 Texture2D<float4> g_DirectSpecular : register(t1);
 Texture2D<float4> g_IndirectDiffuse : register(t2);
 Texture2D<float4> g_IndirectSpecular : register(t3);
-Texture2D<float4> g_DominantLightVisibility : register(t4);
+Texture2D<float> g_DominantLightVisibility : register(t4);
 Texture2D<float4> g_SkipSignal : register(t5);
 
 Texture2D<float3> g_DiffuseAlbedo : register(t6);
 Texture2D<float3> g_SpecularAlbedo : register(t7);
-Texture2D<float3> g_FusedAlbedo : register(t8);
-Texture2D<float4> g_Normals : register(t9);
-Texture2D<float> g_Depthbuffer : register(t10);
+Texture2D<float4> g_Normals : register(t8);
+Texture2D<float> g_Depthbuffer : register(t9);
 
 RWTexture2D<float4> g_Output : register(u0);
 
@@ -68,7 +67,7 @@ ConstantBuffer<SceneLightingInformation> g_LightInfo : register(b1);
 #define COMPOSE_DEBUG_ABS_VALUE 0x8
 #define COMPOSE_DEBUG_DECODE_NORMALS 0x10
 #define COMPOSE_DEBUG_ONLY_FIRST_RESOURCE 0x20
-#define COMPOSE_FUSED 0x40
+#define COMPOSE_INPUT_SIGNALS 0x40
 
 [numthreads(8, 8, 1)]
 void main(uint3 dtid : SV_DispatchThreadID)
@@ -94,8 +93,13 @@ void main(uint3 dtid : SV_DispatchThreadID)
     
     if (g_UseDominantLight && !debugOnlyFirstResource)
     {
-        float dominantLightVisibility = saturate(g_DominantLightVisibility[pixel].x);
-        if (dominantLightVisibility > 0.0f)
+        float dominantLightVisibility = g_DominantLightVisibility[pixel];
+        if (g_Flags & COMPOSE_INPUT_SIGNALS)
+        {
+            dominantLightVisibility = (dominantLightVisibility < 65504.0f) ? 0.0f : 1.0f;
+        }
+            
+        if (0.0f < dominantLightVisibility)
         {
             const float3 normalEnc = g_Normals[pixel].xyz;
             float3 normal = OctahedronUvToNormal(normalEnc.xy);
@@ -125,7 +129,7 @@ void main(uint3 dtid : SV_DispatchThreadID)
             }
             if (g_Flags & COMPOSE_DEBUG_USE_RANGE)
             {
-                directDiffuse = smoothstep(g_RangeMin, g_RangeMax, directDiffuse);
+                directDiffuse = saturate((directDiffuse - g_RangeMin) / (g_RangeMax - g_RangeMin));
             }
             if (g_Flags & COMPOSE_DEBUG_DECODE_NORMALS)
             {
@@ -149,19 +153,9 @@ void main(uint3 dtid : SV_DispatchThreadID)
     }
     else
     {
-        float3 result = float3(0,0,0);
-        if (g_Flags & COMPOSE_FUSED)
-        {
-            const float3 fusedAlbedo = Square(g_FusedAlbedo[pixel]);
-            result = (directSpecular * specularAlbedo) + (directDiffuse.xyz * diffuseAlbedo) + (indirectSpecular * fusedAlbedo);
-        }
-        else
-        {
-            const float3 diffuse  = (directDiffuse.xyz + indirectDiffuse)  * diffuseAlbedo;
-            const float3 specular = (directSpecular    + indirectSpecular) * specularAlbedo;
-            result = diffuse + specular;
-        }
+        const float3 diffuse  = (directDiffuse.xyz + indirectDiffuse)  * diffuseAlbedo;
+        const float3 specular = (directSpecular    + indirectSpecular) * specularAlbedo;
         
-        g_Output[pixel] = float4(skip + result, 0.0f);
+        g_Output[pixel] = float4(diffuse + specular + skip, 0.0f);
     }
 }

@@ -129,21 +129,21 @@ void TranslucencyRenderModule::Init(const json& initData)
 
     // Init for particles rendering
     {
-        RootSignatureDesc signatureDesc;
-        signatureDesc.AddBufferSRVSet(0, ShaderBindStage::Vertex, 1);
-        signatureDesc.AddBufferSRVSet(1, ShaderBindStage::Vertex, 1);
-        signatureDesc.AddBufferSRVSet(2, ShaderBindStage::Vertex, 1);
-        signatureDesc.AddBufferSRVSet(3, ShaderBindStage::Vertex, 1);
-        signatureDesc.AddTextureSRVSet(4, ShaderBindStage::Pixel, 1);
-        signatureDesc.AddTextureSRVSet(5, ShaderBindStage::Pixel, 1);  // t5 - depth texture
+        RootSignatureDesc desc;
+        desc.AddBufferSRVSet(0, ShaderBindStage::Vertex, 1);
+        desc.AddBufferSRVSet(1, ShaderBindStage::Vertex, 1);
+        desc.AddBufferSRVSet(2, ShaderBindStage::Vertex, 1);
+        desc.AddBufferSRVSet(3, ShaderBindStage::Vertex, 1);
+        desc.AddTextureSRVSet(4, ShaderBindStage::Pixel, 1);
+        desc.AddTextureSRVSet(5, ShaderBindStage::Pixel, 1);  // t5 - depth texture
 
-        signatureDesc.AddConstantBufferView(0, ShaderBindStage::VertexAndPixel, 1);  // b0
-        signatureDesc.AddConstantBufferView(1, ShaderBindStage::VertexAndPixel, 1);
+        desc.AddConstantBufferView(0, ShaderBindStage::VertexAndPixel, 1);  // b0
+        desc.AddConstantBufferView(1, ShaderBindStage::VertexAndPixel, 1);
 
         SamplerDesc samplerDesc = {FilterFunc::MinMagLinearMipPoint, AddressMode::Clamp, AddressMode::Clamp, AddressMode::Clamp};
-        signatureDesc.AddStaticSamplers(0, ShaderBindStage::Pixel, 1, &samplerDesc);
+        desc.AddStaticSamplers(0, ShaderBindStage::Pixel, 1, &samplerDesc);
 
-        m_pParticlesRenderRootSignature = RootSignature::CreateRootSignature(L"ParticleRenderPass_RootSignature", signatureDesc);
+        m_pParticlesRenderRootSignature = RootSignature::CreateRootSignature(L"ParticleRenderPass_RootSignature", desc);
 
         m_pParticlesRenderParameters = ParameterSet::CreateParameterSet(m_pParticlesRenderRootSignature);
         m_pParticlesRenderParameters->SetRootConstantBufferResource(GetDynamicBufferPool()->GetResource(), sizeof(RenderingConstantBuffer), 0);
@@ -196,7 +196,7 @@ TranslucencyRenderModule::~TranslucencyRenderModule()
     m_pParticlesRenderPipelineHashObjects.clear();
 }
 
-void TranslucencyRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void TranslucencyRenderModule::Execute(double, CommandList* pCmdList)
 {
     // Don't do any of this if there is nothing to actually render yet
     if (m_TranslucentRenderSurfaces.empty() && m_RenderParticleSpawners.empty())
@@ -746,7 +746,7 @@ void TranslucencyRenderModule::OnNewContentLoaded(ContentBlock* pContentBlock)
     }
 }
 
-void TranslucencyRenderModule::OnContentUnloaded(ContentBlock* pContentBlock)
+void TranslucencyRenderModule::OnContentUnloaded(ContentBlock*)
 {
     // We're going to be modifying the pipeline groups, so make sure no one else is using them
     std::lock_guard<std::mutex> pipelineLock(m_CriticalSection);

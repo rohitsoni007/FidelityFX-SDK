@@ -94,7 +94,7 @@ namespace cauldron
         NO_MOVE(CopyResource)
 
     protected:
-        CopyResource(const SourceData* pSrc) {}
+        CopyResource(const SourceData*) {}
         CopyResource() = delete;
 
         GPUResource* m_pResource = nullptr;

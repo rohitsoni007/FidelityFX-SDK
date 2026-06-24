@@ -32,7 +32,7 @@
 
 namespace cauldron
 {
-    void SwapChainRenderModule::Init(const json& initData)
+    void SwapChainRenderModule::Init(const json&)
     {
         // Setup the texture to be the swapchain render target input
         m_pTexture = GetFramework()->GetRenderTexture(L"SwapChainProxy");
@@ -85,7 +85,7 @@ namespace cauldron
         delete m_pParameters;
     }
 
-    void SwapChainRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+    void SwapChainRenderModule::Execute(double, CommandList* pCmdList)
     {
         GPUScopedProfileCapture SwapchainMarker(pCmdList, L"SwapChain");
 

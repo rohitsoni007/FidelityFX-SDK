@@ -33,10 +33,6 @@
                 "Format": "RGB10A2_UNORM",
                 "AllowUAV": true
             },
-            "FusedAlbedoResource": {
-                "Format": "RGB10A2_UNORM",
-                "AllowUAV": true
-            },
             "SkipSignalResource": {
                 "Format": "RGBA16_FLOAT",
                 "AllowUAV": true
@@ -61,6 +57,14 @@
                 "Format": "R16_FLOAT",
                 "AllowUAV": true
             },
+            "AmbientOcclusionResource": {
+                "Format": "R8_UNORM",
+                "AllowUAV": true
+            },
+            "SpecularOcclusionResource": {
+                "Format": "R8_UNORM",
+                "AllowUAV": true
+            },
             "DenoiserDebugViewResource": {
                 "Format": "RGBA16_FLOAT",
                 "AllowUAV": true
@@ -71,11 +75,12 @@
             "DenoiserIndirectDiffuseTarget": "IndirectDiffuseResource",
             "DenoiserIndirectSpecularTarget": "IndirectSpecularResource",
             "DenoiserDominantLightVisibilityTarget": "DominantLightVisibilityResource",
+            "DenoiserAmbientOcclusionTarget": "AmbientOcclusionResource",
+            "DenoiserSpecularOcclusionTarget": "SpecularOcclusionResource",
             "DenoiserDebugViewTarget": "DenoiserDebugViewResource",
             "DenoiserNormalsTarget": "NormalsResource",
             "DenoiserSpecularAlbedoTarget": "SpecularAlbedoResource",
             "DenoiserDiffuseAlbedoTarget": "DiffuseAlbedoResource",
-            "DenoiserFusedAlbedoTarget": "FusedAlbedoResource",
             "DenoiserSkipSignalTarget": "SkipSignalResource"
         },
         "RenderModules": [

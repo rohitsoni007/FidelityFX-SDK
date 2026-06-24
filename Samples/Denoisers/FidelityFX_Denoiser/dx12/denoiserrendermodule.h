@@ -90,21 +90,9 @@ public:
         m_NeedReInit = false;
     }
 
-    bool UseDominantLightVisibility() const { return m_EnableDominantLightVisibilityDenoising; }
+    bool UseDominantLightVisibility() const { return m_EnableDominantLightVisibility; }
     bool IsDebugViewEnabled() const { return m_EnableDebugging && m_ShowDebugView; }
-    uint32_t GetFuseMode() const { return m_DenoiserMode; }
-
-    /**
-    * @brief   Sets the denoiser mode via hotkey.
-    */
-    void SetDenoiserModeHotkey(FfxApiDenoiserMode mode)
-    {
-        if (mode != m_DenoiserMode && m_DenoiserAvailable)
-        {
-            m_DenoiserMode = mode;
-            m_NeedReInit = true;
-        }
-    }
+    bool IsCheckerboardingEnabled() const { return m_EnableCheckerboarding; }
 
     /**
      * @brief   Toggles dominant light visibility denoising via hotkey.
@@ -113,7 +101,7 @@ public:
     {
         if (m_DenoiserAvailable)
         {
-            m_EnableDominantLightVisibilityDenoising = !m_EnableDominantLightVisibilityDenoising;
+            m_EnableDominantLightVisibility = !m_EnableDominantLightVisibility;
             m_NeedReInit = true;
         }
     }
@@ -152,6 +140,9 @@ public:
     }
 
 private:
+    void RemapSignals();
+    void RemapViewMode();
+
     bool InitDenoiserContext();
     void DestroyContext();
     bool InitResources();
@@ -168,18 +159,20 @@ private:
     void DispatchComposition(double deltaTime, cauldron::CommandList* pCmdList, const SceneLightingInformation& sceneLightInfo, uint32_t dominantLightIndex);
 
     // Settings
-    bool m_DenoiserAvailable = false;
-    bool m_EnableDebugging = false;
-    bool m_ShowDebugView = false;
+    bool m_DenoiserAvailable = {};
+    bool m_EnableDebugging   = {};
+    bool m_EnableValidation  = {};
+    bool m_ShowDebugView     = {};
     
     struct DenoiserConfiguration
     {
         float m_CrossBilateralNormalStrength = {};
-        float m_DisocclusionThreshold = {};
-        float m_GaussianKernelRelaxation = {};
-        float m_MaxRadiance = {};
-        float m_RadianceClipStdK = {};
-        float m_StabilityBias = {};
+        FfxApiFloatBounds m_DebugViewLinearDepthBounds = {};
+        float m_DisocclusionThreshold        = {};
+        float m_GaussianKernelRelaxation     = {};
+        float m_MaxRadiance                  = {};
+        float m_RadianceClipStdK             = {};
+        float m_StabilityBias                = {};
     };
     DenoiserConfiguration m_DenoiserConfiguration = {};
 
@@ -191,8 +184,15 @@ private:
     bool m_DebugShowChannelB = true;
     bool m_DebugShowChannelA = true;
 
-    FfxApiDenoiserMode m_DenoiserMode = FFX_DENOISER_MODE_4_SIGNALS;
-    bool m_EnableDominantLightVisibilityDenoising = true;
+    // Input signals
+    bool m_EnableDirectDiffuse           = true;
+    bool m_EnableDirectSpecular          = true;
+    bool m_EnableIndirectDiffuse         = true;
+    bool m_EnableIndirectSpecular        = true;
+    bool m_EnableDominantLightVisibility = true;
+    bool m_EnableAmbientOcclusion        = false;
+    bool m_EnableSpecularOcclusion       = false;
+    bool m_EnableCheckerboarding         = false;
 
     enum class ViewMode
     {
@@ -204,58 +204,66 @@ private:
         Indirect,
         IndirectDiffuse,
         IndirectSpecular,
+        DominantLightVisibility,
+        AmbientOcclusion,
+        SpecularOcclusion,
         InputDirect,
         InputDirectDiffuse,
         InputDirectSpecular,
         InputIndirect,
         InputIndirectDiffuse,
         InputIndirectSpecular,
+        InputDominantLightVisibility,
+        InputAmbientOcclusion,
+        InputSpecularOcclusion,
         InputLinearDepth,
         InputMotionVectors,
         InputNormals,
         InputSpecularAlbedo,
         InputDiffuseAlbedo,
-        InputFusedAlbedo,
         InputSkipSignal,
 
         Count  // Sentinel value representing total count of view modes
     };
     int32_t m_ViewMode = 0;
 
-    cauldron::Entity* m_pDenoiserCamera = nullptr;
-    cauldron::CameraComponent* m_pDenoiserCameraComponent = nullptr;
+    cauldron::Entity* m_pDenoiserCamera = {};
+    cauldron::CameraComponent* m_pDenoiserCameraComponent = {};
 
-    const cauldron::Texture* m_pColorTarget = nullptr;
-    const cauldron::Texture* m_pDepthTarget = nullptr;
-    const cauldron::Texture* m_pGBufferMotionVectors = nullptr;
+    const cauldron::Texture* m_pColorTarget                     = {};
+    const cauldron::Texture* m_pDepthTarget                     = {};
+    const cauldron::Texture* m_pGBufferMotionVectors            = {};
 
-    const cauldron::Texture* m_pDirectSpecular = nullptr;
-    const cauldron::Texture* m_pDirectDiffuse = nullptr;
-    const cauldron::Texture* m_pIndirectSpecular = nullptr;
-    const cauldron::Texture* m_pIndirectRayDirSpecular = nullptr;
-    const cauldron::Texture* m_pIndirectDiffuse  = nullptr;
-    const cauldron::Texture* m_pIndirectRayDirDiffuse  = nullptr;
-    const cauldron::Texture* m_pDominantLightVisibility  = nullptr;
+    const cauldron::Texture* m_pLinearDepth                     = {};
+    const cauldron::Texture* m_pNormals                         = {};
+    const cauldron::Texture* m_pDiffuseAlbedo                   = {};
+    const cauldron::Texture* m_pSpecularAlbedo                  = {};
+    const cauldron::Texture* m_pSkipSignal                      = {};
 
-    const cauldron::Texture* m_pLinearDepth = nullptr;
-    const cauldron::Texture* m_pNormals = nullptr;
-    const cauldron::Texture* m_pSpecularAlbedo = nullptr;
-    const cauldron::Texture* m_pDiffuseAlbedo = nullptr;
-    const cauldron::Texture* m_pFusedAlbedo = nullptr;
-    const cauldron::Texture* m_pSkipSignal = nullptr;
+    const cauldron::Texture* m_pDebugView                       = {};
 
-    const cauldron::Texture* m_pDenoisedDirectSpecular = nullptr;
-    const cauldron::Texture* m_pDenoisedDirectDiffuse = nullptr;
-    const cauldron::Texture* m_pDenoisedIndirectSpecular = nullptr;
-    const cauldron::Texture* m_pDenoisedIndirectDiffuse = nullptr;
-    const cauldron::Texture* m_pDenoisedDominantLightVisibility = nullptr;
-    const cauldron::Texture* m_pDebugView = nullptr;
+    // Noisy input signals
+    const cauldron::Texture* m_pDirectDiffuse                   = {};
+    const cauldron::Texture* m_pDirectSpecular                  = {};
+    const cauldron::Texture* m_pIndirectSpecular                = {};
+    const cauldron::Texture* m_pIndirectDiffuse                 = {};
+    const cauldron::Texture* m_pDominantLightVisibility         = {};
+    const cauldron::Texture* m_pAmbientOcclusion                = {};
+    const cauldron::Texture* m_pSpecularOcclusion               = {};
+    // Denoised output signals
+    const cauldron::Texture* m_pDenoisedDirectDiffuse           = {};
+    const cauldron::Texture* m_pDenoisedDirectSpecular          = {};
+    const cauldron::Texture* m_pDenoisedIndirectSpecular        = {};
+    const cauldron::Texture* m_pDenoisedIndirectDiffuse         = {};
+    const cauldron::Texture* m_pDenoisedDominantLightVisibility = {};
+    const cauldron::Texture* m_pDenoisedAmbientOcclusion        = {};
+    const cauldron::Texture* m_pDenoisedSpecularOcclusion       = {};
 
     cauldron::SamplerDesc m_BilinearSampler;
 
-    cauldron::RootSignature* m_pPrePassRootSignature = nullptr;
-    cauldron::PipelineObject* m_pPrePassPipeline = nullptr;
-    cauldron::ParameterSet* m_pPrePassParameterSet = nullptr;
+    cauldron::RootSignature* m_pPrePassRootSignature = {};
+    cauldron::PipelineObject* m_pPrePassPipeline = {};
+    cauldron::ParameterSet* m_pPrePassParameterSet = {};
     struct PrePassConstants
     {
         float clipToCamera[16];
@@ -264,12 +272,12 @@ private:
         float padding[2];
     };
 
-    cauldron::RootSignature* m_pComposeRootSignature = nullptr;
-    cauldron::PipelineObject* m_pComposePipeline = nullptr;
+    cauldron::RootSignature* m_pComposeRootSignature = {};
+    cauldron::PipelineObject* m_pComposePipeline = {};
 
     static constexpr uint32_t m_NumComposeParameterSets = 3;
     cauldron::ParameterSet* m_pComposeParameterSets[m_NumComposeParameterSets];
-    cauldron::ParameterSet* m_pCurrentComposeParameterSet = nullptr;
+    cauldron::ParameterSet* m_pCurrentComposeParameterSet = {};
     uint32_t m_pCurrentComposeParameterSetIndex = 0;
     struct ComposeConstants
     {
@@ -300,10 +308,10 @@ private:
         COMPOSE_DEBUG_ABS_VALUE = 0x8,
         COMPOSE_DEBUG_DECODE_NORMALS = 0x10,
         COMPOSE_DEBUG_ONLY_FIRST_RESOURCE = 0x20,
-        COMPOSE_FUSED = 0x40,
+        COMPOSE_INPUT_SIGNALS = 0x40
     };
 
-    ffx::Context m_pDenoiserContext = nullptr;
+    ffx::Context m_pDenoiserContext = {};
 
     std::vector<uint64_t> m_DenoiserVersionIds;
     std::vector<const char*> m_DenoiserVersionStrings;

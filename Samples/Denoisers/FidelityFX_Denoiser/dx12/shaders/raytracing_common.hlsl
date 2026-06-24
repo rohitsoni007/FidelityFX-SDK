@@ -35,6 +35,38 @@ float CalculateMipLevelFromRayHit(float rayT, LocalBasis localBasis)
     return max(0.0f, lambda);
 }
 
+float TraceDominantLightRay(RaytracingAccelerationStructure rtas, float3 origin, float3 direction, float tMin = 0.01f, float tMax = 1024.0f)
+{
+    RayDesc dominantLightRay;
+    dominantLightRay.Origin = origin;
+    dominantLightRay.Direction = direction;
+    dominantLightRay.TMin = tMin;
+    dominantLightRay.TMax = tMax;
+
+    RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER> dominantLightQuery;
+    dominantLightQuery.TraceRayInline(rtas, 0, 0xff, dominantLightRay);
+    dominantLightQuery.Proceed();
+    return dominantLightQuery.CommittedStatus() == COMMITTED_TRIANGLE_HIT ? dominantLightQuery.CommittedRayT() : 65504.0f;
+}
+
+float GetDominantLightHitDistance(RaytracingAccelerationStructure rtas, LightInformation lightInfo, inout uint rngState, float3 worldPosition, float3 normal)
+{
+    const float lightSourceRadius = 0.1f;
+    const float3 rayOrigin = worldPosition + normal * 3.0e-3;
+    float hitDistance = 0.0f;
+    if (lightInfo.Type == 0 /*LightType::Directional*/)
+    {
+        const float3 rayDirection = lightInfo.DirectionRange.xyz;
+
+        float2 diskSample = ConcentricSampleDisk(rngState) * lightSourceRadius;
+        float3 offset = (diskSample.x * normalize(cross(normal, rayDirection))) + diskSample.y * normalize(cross(cross(normal, rayDirection), normal));
+        float3 offsettedOrigin = rayOrigin + offset;
+        hitDistance = TraceDominantLightRay(rtas, offsettedOrigin, rayDirection);
+    }
+
+    return hitDistance;
+}
+
 float TraceShadowRay(RaytracingAccelerationStructure rtas, float3 origin, float3 direction, float tMin = 0.01f, float tMax = 1024.0f)
 {
     RayDesc shadowRay;
@@ -74,7 +106,7 @@ float GetSoftShadowFactor(RaytracingAccelerationStructure rtas, LightInformation
         toLight = normalize(toLight);
         
         float3 perpL = cross(toLight, float3(0.0f, 1.0f, 0.0f));
-        perpL = (all(perpL == 0.0f)) ? 1.0f : perpL;
+        perpL = (all(perpL == 0.0f)) ? float3(1.0f, 0.0f, 0.0f) : perpL;
 
         float3 toLightEdge = normalize((lightPos + perpL * lightSourceRadius) - worldPosition);
         float cosHalfAngle = saturate(dot(toLight, toLightEdge));

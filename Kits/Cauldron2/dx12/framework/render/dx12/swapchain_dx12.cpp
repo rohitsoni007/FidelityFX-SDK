@@ -155,7 +155,7 @@ namespace cauldron
 
     void SwapChainInternal::WaitForSwapChain()
     {
-        m_CurrentBackBuffer = m_pSwapChain->GetCurrentBackBufferIndex();
+        m_CurrentBackBuffer = static_cast<uint8_t>(m_pSwapChain->GetCurrentBackBufferIndex());
         m_pRenderTarget->SetCurrentBackBufferIndex(m_CurrentBackBuffer);
 
         // Make sure the buffer is ready to render into
@@ -538,7 +538,6 @@ namespace cauldron
         {
             DWM_TIMING_INFO compositionTimingInfo{};
             compositionTimingInfo.cbSize = sizeof(DWM_TIMING_INFO);
-            double  monitorRefreshRate   = 0.0f;
             HRESULT hr                   = DwmGetCompositionTimingInfo(nullptr, &compositionTimingInfo);
             if (SUCCEEDED(hr))
             {

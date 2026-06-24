@@ -100,7 +100,7 @@ namespace cauldron
         ImGui::DestroyContext(m_pImGuiContext);
     }
 
-    void UIBackendInternal::PlatformUpdate(double deltaTime)
+    void UIBackendInternal::PlatformUpdate(double)
     {
         // Do windows-specific updates
         ImGui_ImplWin32_NewFrame();
@@ -228,14 +228,14 @@ namespace cauldron
                     ImGui::EndTabItem();
                 }
 
-                if (ImGui::BeginTabItem("FSR Latency Reduction 2.0"))
+                if (ImGui::BeginTabItem("FSR Anti-Lag 2.0"))
                 {
                     bool enabled = GetFramework()->GetDevice()->GetAntiLag2Enabled();
 
                     if (!GetFramework()->GetDevice()->GetAntiLag2FeatureSupported())
                         ImGui::BeginDisabled();
 
-                    if (ImGui::Checkbox("FSR Latency Reduction 2.0 Enabled", &enabled))
+                    if (ImGui::Checkbox("FSR Anti-Lag 2.0 Enabled", &enabled))
                     {
                         GetFramework()->GetDevice()->SetAntiLag2Enabled(enabled);
                     }

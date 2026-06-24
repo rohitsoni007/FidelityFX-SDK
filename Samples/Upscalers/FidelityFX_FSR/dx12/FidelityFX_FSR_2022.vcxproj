@@ -66,6 +66,9 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <Optimization>Disabled</Optimization>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -78,7 +81,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -87,6 +90,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\Kits\Cauldron2\dx12\vcpkg_installed\x64-windows\x64-windows\include;$(ProjectDir)..\..\..\..\Kits\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4201;4324;4408;4505</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -121,29 +126,23 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="CopyRequiredDlls" AfterTargets="Build">
     <Message Importance="high" Text="Copying required FidelityFX DLLs..." />
-    
     <!-- Copy config file -->
     <MakeDir Directories="$(OutDir)configs" />
     <Copy SourceFiles="$(ProjectDir)config\fsrapiconfig.json" DestinationFolder="$(OutDir)configs\" />
-    
     <!-- Copy Loader DLLs -->
     <Copy SourceFiles="$(FfxDllPathLoader)amd_fidelityfx_loader_dx12.dll" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="$(FfxDllPathLoader)amd_fidelityfx_loader_dx12.pdb" DestinationFolder="$(OutDir)" Condition="Exists('$(FfxDllPathLoader)amd_fidelityfx_loader_dx12.pdb')" />
-    
     <!-- Copy Upscaler DLLs -->
     <Copy SourceFiles="$(FfxDllPathUpscaler)amd_fidelityfx_upscaler_dx12.dll" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="$(FfxDllPathUpscaler)amd_fidelityfx_upscaler_dx12.pdb" DestinationFolder="$(OutDir)" Condition="Exists('$(FfxDllPathUpscaler)amd_fidelityfx_upscaler_dx12.pdb')" />
-    
     <!-- Copy FrameGeneration DLLs -->
     <Copy SourceFiles="$(FfxDllPathFrameGen)amd_fidelityfx_framegeneration_dx12.dll" DestinationFolder="$(OutDir)" />
     <Copy SourceFiles="$(FfxDllPathFrameGen)amd_fidelityfx_framegeneration_dx12.pdb" DestinationFolder="$(OutDir)" Condition="Exists('$(FfxDllPathFrameGen)amd_fidelityfx_framegeneration_dx12.pdb')" />
-    
     <!-- Copy vcpkg runtime dependencies -->
     <ItemGroup>
       <VcpkgBinFiles Include="$(ProjectDir)..\..\..\..\Kits\Cauldron2\dx12\vcpkg_installed\x64-windows\x64-windows\bin\*" />
     </ItemGroup>
     <Copy SourceFiles="@(VcpkgBinFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-    
     <Message Importance="high" Text="Successfully copied all required DLLs" />
   </Target>
 </Project>

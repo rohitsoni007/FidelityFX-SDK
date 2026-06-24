@@ -121,7 +121,7 @@ GBufferRenderModule::~GBufferRenderModule()
     m_PipelineRenderGroups.clear();
 }
 
-void GBufferRenderModule::Execute(double deltaTime, CommandList* pCmdList)
+void GBufferRenderModule::Execute(double, CommandList* pCmdList)
 {
     GPUScopedProfileCapture gbufferMarker(pCmdList, L"GBuffer");
 

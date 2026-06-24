@@ -141,7 +141,7 @@ namespace cauldron
         GetDevice()->GetImpl()->DX12Device()->CreateRenderTargetView(const_cast<ID3D12Resource*>(pResource->GetImpl()->DX12Resource()), &rtvDesc, hCPUHandle);
     }
 
-    void ResourceViewInternal::BindDSV(const GPUResource* pResource, const TextureDesc& textureDesc, ViewDimension dimension, int32_t mip, int32_t arraySize, int32_t firstSlice, uint32_t index)
+    void ResourceViewInternal::BindDSV(const GPUResource* pResource, const TextureDesc&, ViewDimension dimension, int32_t mip, int32_t arraySize, int32_t firstSlice, uint32_t index)
     {
         D3D12_RESOURCE_DESC renderTargetDesc = pResource->GetImpl()->DX12Desc();
 
@@ -277,7 +277,7 @@ namespace cauldron
         GetDevice()->GetImpl()->DX12Device()->CreateShaderResourceView(const_cast<ID3D12Resource*>(pResource->GetImpl()->DX12Resource()), &srvDesc, hCPUHandle);
     }
 
-    void ResourceViewInternal::BindTextureUAV(const GPUResource* pResource, const TextureDesc& textureDesc, ViewDimension dimension, int32_t mip, int32_t arraySize, int32_t firstSlice, uint32_t index)
+    void ResourceViewInternal::BindTextureUAV(const GPUResource* pResource, const TextureDesc&, ViewDimension dimension, int32_t mip, int32_t arraySize, int32_t firstSlice, uint32_t index)
     {
         D3D12_RESOURCE_DESC resourceDesc = pResource->GetImpl()->DX12Desc();
 
@@ -349,7 +349,7 @@ namespace cauldron
         GetDevice()->GetImpl()->DX12Device()->CreateUnorderedAccessView(const_cast<ID3D12Resource*>(pResource->GetImpl()->DX12Resource()), nullptr, &uavDesc, hCPUHandle);
     }
 
-    void ResourceViewInternal::BindBufferCBV(const GPUResource* pResource, uint32_t index)
+    void ResourceViewInternal::BindBufferCBV(const GPUResource*, uint32_t)
     {
         CauldronCritical(L"Not yet implemented.");
     }

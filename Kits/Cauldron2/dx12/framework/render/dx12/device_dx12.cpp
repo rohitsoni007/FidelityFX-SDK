@@ -345,7 +345,6 @@ namespace cauldron
         D3D12_COMMAND_QUEUE_DESC queueDesc       = {commandListType, D3D12_COMMAND_QUEUE_PRIORITY_HIGH, D3D12_COMMAND_QUEUE_FLAG_NONE, 0};
 
         // Create the queue
-        int32_t queueIndex = static_cast<int32_t>(queueType);
         m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&queueSyncPrim.m_pQueue));
         CauldronAssert(ASSERT_CRITICAL, queueSyncPrim.m_pQueue, L"Could not create required command queue!");
 
@@ -644,7 +643,6 @@ namespace cauldron
             return CreateCommandList(name, queueType, m_QueueSyncPrims[queueID], L"CauldronCopyAllocator");
         default:
             CauldronCritical(L"Cannot call CreateCommandList for unknown queue type");
-            return nullptr;
         }
     }
 
@@ -716,7 +714,7 @@ namespace cauldron
         delete pImmediateCmdList;
     }
 
-    uint64_t DeviceInternal::ExecuteCommandLists(std::vector<CommandList*>& cmdLists, CommandQueue queueType, bool isFirstSubmissionOfFrame, bool isLastSubmissionOfFrame)
+    uint64_t DeviceInternal::ExecuteCommandLists(std::vector<CommandList*>& cmdLists, CommandQueue queueType, bool, bool)
     {
         std::vector<ID3D12CommandList*> d3dCommandList;
         std::vector<CommandList*>::iterator it = cmdLists.begin();

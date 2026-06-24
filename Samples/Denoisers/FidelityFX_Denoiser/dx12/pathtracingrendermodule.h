@@ -86,7 +86,7 @@ private:
     {
         struct BoundTexture
         {
-            const cauldron::Texture* pTexture = nullptr;
+            const cauldron::Texture* pTexture = {};
             uint32_t count    = 1;
         };
 
@@ -108,29 +108,35 @@ private:
     };
     RTInfoTables m_rtInfoTables;
 
-    const cauldron::Texture* m_pColorTarget = nullptr;
-    const cauldron::Texture* m_pDepthTarget = nullptr;
+    float m_AmbientOcclusionA  = 0.5f;
+    float m_AmbientOcclusionB  = 0.1f;
+    float m_SpecularOcclusionA = 0.5f;
+    float m_SpecularOcclusionB = 0.1f;
 
-    cauldron::RootSignature* m_pTraceRaysDenoiserRootSignature = nullptr;
-    cauldron::PipelineObject* m_pTraceRaysDenoiserPipeline = nullptr;
-    cauldron::ParameterSet*m_pTraceRaysDenoiserParameterSet = nullptr;
+    const cauldron::Texture* m_pColorTarget = {};
+    const cauldron::Texture* m_pDepthTarget = {};
 
-    const cauldron::Texture* m_pDirectSpecularOutput = nullptr;
-    const cauldron::Texture* m_pDirectDiffuseOutput = nullptr;
-    const cauldron::Texture* m_pIndirectSpecularOutput = nullptr;
-    const cauldron::Texture* m_pIndirectSpecularRayDirOutput = nullptr;
-    const cauldron::Texture* m_pIndirectDiffuseOutput = nullptr;
-    const cauldron::Texture* m_pIndirectDiffuseRayDirOutput = nullptr;
-    const cauldron::Texture* m_pDominantLightVisibilityOutput = nullptr;
-    const cauldron::Texture* m_pNormals = nullptr;
-    const cauldron::Texture* m_pSpecularAlbedo = nullptr;
-    const cauldron::Texture* m_pFusedAlbedo = nullptr;
-    const cauldron::Texture* m_pDiffuseAlbedo = nullptr;
-    const cauldron::Texture* m_pSkipSignal = nullptr;
+    cauldron::RootSignature* m_pTraceRaysDenoiserRootSignature = {};
+    cauldron::PipelineObject* m_pTraceRaysDenoiserPipeline = {};
+    cauldron::ParameterSet*m_pTraceRaysDenoiserParameterSet = {};
 
-    const cauldron::Texture* m_pPrefilteredEnvironmentMap = nullptr;
-    const cauldron::Texture* m_pIrradianceEnvironmentMap = nullptr;
-    const cauldron::Texture* m_pBRDFTexture = nullptr;
+    const cauldron::Texture* m_pDirectSpecularOutput          = {};
+    const cauldron::Texture* m_pDirectDiffuseOutput           = {};
+    const cauldron::Texture* m_pIndirectSpecularOutput        = {};
+    const cauldron::Texture* m_pIndirectSpecularRayDirOutput  = {};
+    const cauldron::Texture* m_pIndirectDiffuseOutput         = {};
+    const cauldron::Texture* m_pIndirectDiffuseRayDirOutput   = {};
+    const cauldron::Texture* m_pDominantLightVisibilityOutput = {};
+    const cauldron::Texture* m_pAmbientOcclusionOutput        = {};
+    const cauldron::Texture* m_pSpecularOcclusionOutput       = {};
+    const cauldron::Texture* m_pNormals                       = {};
+    const cauldron::Texture* m_pDiffuseAlbedo                 = {};
+    const cauldron::Texture* m_pSpecularAlbedo                = {};
+    const cauldron::Texture* m_pSkipSignal                    = {};
+
+    const cauldron::Texture* m_pPrefilteredEnvironmentMap = {};
+    const cauldron::Texture* m_pIrradianceEnvironmentMap = {};
+    const cauldron::Texture* m_pBRDFTexture = {};
 
     cauldron::SamplerDesc m_ComparisonSampler;
     cauldron::SamplerDesc m_SpecularSampler;
@@ -138,5 +144,5 @@ private:
 
     std::mutex m_Mutex;
 
-    DenoiserRenderModule* m_pDenoiserRenderModule = nullptr;
+    DenoiserRenderModule* m_pDenoiserRenderModule = {};
 };

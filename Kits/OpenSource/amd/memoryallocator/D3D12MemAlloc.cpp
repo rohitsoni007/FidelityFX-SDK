@@ -1644,7 +1644,11 @@ void JsonWriter::BeginValue(bool isString)
         StackItem& currItem = m_Stack.back();
         if (currItem.type == COLLECTION_TYPE_OBJECT && currItem.valueCount % 2 == 0)
         {
+#ifdef NDEBUG
+            UNREFERENCED_PARAMETER(isString);
+#else
             D3D12MA_ASSERT(isString);
+#endif
         }
 
         if (currItem.type == COLLECTION_TYPE_OBJECT && currItem.valueCount % 2 == 1)
@@ -2966,6 +2970,9 @@ BlockMetadata::BlockMetadata(const ALLOCATION_CALLBACKS* allocationCallbacks, bo
     D3D12MA_ASSERT(allocationCallbacks);
 }
 
+#pragma warning( push )
+#pragma warning( disable : 4100 )
+#pragma warning( disable : 4189 )
 void BlockMetadata::DebugLogAllocation(UINT64 offset, UINT64 size, void* privateData) const
 {
     if (IsVirtual())
@@ -2984,6 +2991,7 @@ void BlockMetadata::DebugLogAllocation(UINT64 offset, UINT64 size, void* private
             offset, size, privateData, name ? name : L"D3D12MA_Empty");
     }
 }
+#pragma warning( pop )
 
 void BlockMetadata::PrintDetailedMap_Begin(JsonWriter& json,
     UINT64 unusedBytes, size_t allocationCount, size_t unusedRangeCount) const
@@ -3358,7 +3366,7 @@ bool BlockMetadata_Linear::CreateAllocationRequest(
     UINT64 allocSize,
     UINT64 allocAlignment,
     bool upperAddress,
-    UINT32 strategy,
+    UINT32,
     AllocationRequest* pAllocationRequest)
 {
     D3D12MA_ASSERT(allocSize > 0 && "Cannot allocate empty block!");
@@ -3378,7 +3386,7 @@ bool BlockMetadata_Linear::CreateAllocationRequest(
 
 void BlockMetadata_Linear::Alloc(
     const AllocationRequest& request,
-    UINT64 allocSize,
+    UINT64,
     void* privateData)
 {
     UINT64 offset = (UINT64)request.allocHandle - 1;
@@ -3409,10 +3417,13 @@ void BlockMetadata_Linear::Alloc(
     }
     case ALLOC_REQUEST_END_OF_2ND:
     {
+#ifndef NDEBUG
         SuballocationVectorType& suballocations1st = AccessSuballocations1st();
         // New allocation at the end of 2-part ring buffer, so before first allocation from 1st vector.
         D3D12MA_ASSERT(!suballocations1st.empty() &&
             offset + request.size <= suballocations1st[m_1stNullItemsBeginCount].offset);
+#endif
+
         SuballocationVectorType& suballocations2nd = AccessSuballocations2nd();
 
         switch (m_2ndVectorMode)
@@ -3550,14 +3561,14 @@ AllocHandle BlockMetadata_Linear::GetAllocationListBegin() const
     return (AllocHandle)0;
 }
 
-AllocHandle BlockMetadata_Linear::GetNextAllocation(AllocHandle prevAlloc) const
+AllocHandle BlockMetadata_Linear::GetNextAllocation(AllocHandle) const
 {
     // Function only used for defragmentation, which is disabled for this algorithm
     D3D12MA_ASSERT(0);
     return (AllocHandle)0;
 }
 
-UINT64 BlockMetadata_Linear::GetNextFreeRegionSize(AllocHandle alloc) const
+UINT64 BlockMetadata_Linear::GetNextFreeRegionSize(AllocHandle) const
 {
     // Function only used for defragmentation, which is disabled for this algorithm
     D3D12MA_ASSERT(0);
@@ -4613,7 +4624,11 @@ bool BlockMetadata_TLSF::CreateAllocationRequest(
     AllocationRequest* pAllocationRequest)
 {
     D3D12MA_ASSERT(allocSize > 0 && "Cannot allocate empty block!");
+#ifdef NDEBUG
+    UNREFERENCED_PARAMETER(upperAddress);
+#else
     D3D12MA_ASSERT(!upperAddress && "ALLOCATION_FLAG_UPPER_ADDRESS can be used only with linear algorithm.");
+#endif
     D3D12MA_ASSERT(pAllocationRequest != NULL);
     D3D12MA_HEAVY_ASSERT(Validate());
 
@@ -4765,7 +4780,7 @@ bool BlockMetadata_TLSF::CreateAllocationRequest(
 
 void BlockMetadata_TLSF::Alloc(
     const AllocationRequest& request,
-    UINT64 allocSize,
+    UINT64,
     void* privateData)
 {
     // Get block and pop it from the free list

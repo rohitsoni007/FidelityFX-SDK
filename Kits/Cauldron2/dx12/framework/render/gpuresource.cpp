@@ -83,9 +83,6 @@ namespace cauldron
         {
         case ResourceFormat::Unknown:
             return 0;
-        default:
-            CauldronCritical(L"Unsupported Resource Format requested! Aborting");
-            return 0;
 
             // 8-bit
         case ResourceFormat::R8_SINT:
@@ -160,6 +157,9 @@ namespace cauldron
         case cauldron::ResourceFormat::BC7_UNORM:
         case cauldron::ResourceFormat::BC7_SRGB:
             return 16;
+
+        default:
+            CauldronCritical(L"Unsupported Resource Format requested! Aborting");
         };
     }
 

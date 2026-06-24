@@ -108,7 +108,7 @@ float3 SampleDiffuseReflectionVector(inout uint rngState, float3x3 localToWorld,
 {
     const float3 rLocal = SampleCosineWeightedHemisphere(rngState, pdf);
 
-    return mul(localToWorld, rLocal);
+    return normalize(mul(rLocal, localToWorld));
 }
     
 //------------------------------------------------------------------------------
@@ -170,6 +170,7 @@ float3 SampleSpecularReflectionVector(inout uint rngState, float3x3 localToWorld
     const float3 vLocal = mul(localToWorld, vWorld);
     const float alpha = roughness * roughness;
     const float3 rLocal = SampleVndfHemisphereBounded(rngState, vLocal, alpha.xx, pdf);
+
     return normalize(mul(rLocal, localToWorld));
 }
 

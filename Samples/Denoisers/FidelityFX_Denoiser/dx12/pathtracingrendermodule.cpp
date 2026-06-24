@@ -116,9 +116,13 @@ void PathTracingRenderModule::Execute(double deltaTime, cauldron::CommandList* p
     constants.inv_render_size[1] = 1.0f / resInfo.RenderHeight;
     constants.frame_index = static_cast<uint32_t>(GetFramework()->GetFrameID());
     constants.ibl_factor = GetScene()->GetIBLFactor();
-    constants.fuse_mode = m_pDenoiserRenderModule->GetFuseMode();
     constants.use_dominant_light = m_pDenoiserRenderModule->UseDominantLightVisibility() ? 1 : 0;
     constants.dominant_light_index = 0;
+    constants.checkerboard = m_pDenoiserRenderModule->IsCheckerboardingEnabled() ? 1 : 0;
+    constants.ambientOcclusionA = m_AmbientOcclusionA;
+    constants.ambientOcclusionB = m_AmbientOcclusionB;
+    constants.specularOcclusionA = m_SpecularOcclusionA;
+    constants.specularOcclusionB = m_SpecularOcclusionB;
 
     const SceneLightingInformation& sceneLightInfo = GetScene()->GetSceneLightInfo();
     for (uint32_t i = 0; i < static_cast<uint32_t>(sceneLightInfo.LightCount); ++i)
@@ -165,7 +169,17 @@ void PathTracingRenderModule::Execute(double deltaTime, cauldron::CommandList* p
 
 void PathTracingRenderModule::BuildUI()
 {
-    // noop
+    static const bool Enable = false;
+
+    if (Enable)
+    {
+        UISection* uiSection = GetUIManager()->RegisterUIElements("Path Tracing", UISectionType::Sample);
+
+        uiSection->RegisterUIElement<UISlider<float>>("Ambient occlusion A",  (float&)m_AmbientOcclusionA,  0.01f, 1.0f, Enable, [](float cur, float old) {});
+        uiSection->RegisterUIElement<UISlider<float>>("Ambient occlusion B",  (float&)m_AmbientOcclusionB,  0.00f, 1.0f, Enable, [](float cur, float old) {});
+        uiSection->RegisterUIElement<UISlider<float>>("Specular occlusion A", (float&)m_SpecularOcclusionA, 0.01f, 1.0f, Enable, [](float cur, float old) {});
+        uiSection->RegisterUIElement<UISlider<float>>("Specular occlusion B", (float&)m_SpecularOcclusionB, 0.00f, 1.0f, Enable, [](float cur, float old) {});
+    }
 }
 
 void PathTracingRenderModule::OnNewContentLoaded(cauldron::ContentBlock* pContentBlock)
@@ -450,16 +464,17 @@ bool PathTracingRenderModule::InitPipelineObjects()
         RootSignatureDesc rootSignatureDesc;
         AddTraceRaysRootSignatureSrvs(rootSignatureDesc);
 
-        rootSignatureDesc.AddTextureUAVSet(0, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(1, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(2, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(3, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(4, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(5, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(6, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(7, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(8, ShaderBindStage::Compute, 1);
-        rootSignatureDesc.AddTextureUAVSet(9, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 0, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 1, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 2, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 3, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 4, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 5, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 6, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 7, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 8, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet( 9, ShaderBindStage::Compute, 1);
+        rootSignatureDesc.AddTextureUAVSet(10, ShaderBindStage::Compute, 1);
 
         m_pTraceRaysDenoiserRootSignature = RootSignature::CreateRootSignature(L"TraceRaysDenoiser_RootSignature", rootSignatureDesc);
         if (!m_pTraceRaysDenoiserRootSignature)
@@ -499,32 +514,34 @@ bool PathTracingRenderModule::InitResources()
         desc.Height = renderingHeight;
     };
 
-    m_pColorTarget = GetFramework()->GetColorTargetForCallback(GetName());
-    m_pDepthTarget = GetFramework()->GetRenderTexture(L"DepthTarget");
-    m_pDirectDiffuseOutput = GetFramework()->GetRenderTexture(L"DenoiserDirectDiffuseTarget");
-    m_pDirectSpecularOutput = GetFramework()->GetRenderTexture(L"DenoiserDirectSpecularTarget");
-    m_pIndirectDiffuseOutput = GetFramework()->GetRenderTexture(L"DenoiserIndirectDiffuseTarget");
-    m_pIndirectSpecularOutput = GetFramework()->GetRenderTexture(L"DenoiserIndirectSpecularTarget");
+    m_pColorTarget                   = GetFramework()->GetColorTargetForCallback(GetName());
+    m_pDepthTarget                   = GetFramework()->GetRenderTexture(L"DepthTarget");
+    m_pDirectDiffuseOutput           = GetFramework()->GetRenderTexture(L"DenoiserDirectDiffuseTarget");
+    m_pDirectSpecularOutput          = GetFramework()->GetRenderTexture(L"DenoiserDirectSpecularTarget");
+    m_pIndirectDiffuseOutput         = GetFramework()->GetRenderTexture(L"DenoiserIndirectDiffuseTarget");
+    m_pIndirectSpecularOutput        = GetFramework()->GetRenderTexture(L"DenoiserIndirectSpecularTarget");
     m_pDominantLightVisibilityOutput = GetFramework()->GetRenderTexture(L"DenoiserDominantLightVisibilityTarget");
+    m_pAmbientOcclusionOutput        = GetFramework()->GetRenderTexture(L"DenoiserAmbientOcclusionTarget");
+    m_pSpecularOcclusionOutput       = GetFramework()->GetRenderTexture(L"DenoiserSpecularOcclusionTarget");
 
-    m_pDiffuseAlbedo = GetFramework()->GetRenderTexture(L"DenoiserDiffuseAlbedoTarget");
-    m_pSpecularAlbedo = GetFramework()->GetRenderTexture(L"DenoiserSpecularAlbedoTarget");
-    m_pFusedAlbedo = GetFramework()->GetRenderTexture(L"DenoiserFusedAlbedoTarget");
-    m_pNormals = GetFramework()->GetRenderTexture(L"DenoiserNormalsTarget");
-    m_pSkipSignal = GetFramework()->GetRenderTexture(L"DenoiserSkipSignalTarget");
+    m_pDiffuseAlbedo                 = GetFramework()->GetRenderTexture(L"DenoiserDiffuseAlbedoTarget");
+    m_pSpecularAlbedo                = GetFramework()->GetRenderTexture(L"DenoiserSpecularAlbedoTarget");
+    m_pNormals                       = GetFramework()->GetRenderTexture(L"DenoiserNormalsTarget");
+    m_pSkipSignal                    = GetFramework()->GetRenderTexture(L"DenoiserSkipSignalTarget");
 
-    m_pTraceRaysDenoiserParameterSet->SetTextureSRV(m_pDepthTarget, ViewDimension::Texture2D, 1);
+    m_pTraceRaysDenoiserParameterSet->SetTextureSRV(m_pDepthTarget,                   ViewDimension::Texture2D,  1);
 
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDirectSpecularOutput, ViewDimension::Texture2D, 0);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDirectDiffuseOutput, ViewDimension::Texture2D, 1);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pIndirectSpecularOutput, ViewDimension::Texture2D, 2);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pIndirectDiffuseOutput, ViewDimension::Texture2D, 3);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDominantLightVisibilityOutput, ViewDimension::Texture2D, 4);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDiffuseAlbedo, ViewDimension::Texture2D, 5);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pSpecularAlbedo, ViewDimension::Texture2D, 6);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pFusedAlbedo, ViewDimension::Texture2D, 7);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pNormals, ViewDimension::Texture2D, 8);
-    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pSkipSignal, ViewDimension::Texture2D, 9);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDirectSpecularOutput,          ViewDimension::Texture2D,  0);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDirectDiffuseOutput,           ViewDimension::Texture2D,  1);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pIndirectSpecularOutput,        ViewDimension::Texture2D,  2);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pIndirectDiffuseOutput,         ViewDimension::Texture2D,  3);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDominantLightVisibilityOutput, ViewDimension::Texture2D,  4);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pAmbientOcclusionOutput,        ViewDimension::Texture2D,  5);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pSpecularOcclusionOutput,       ViewDimension::Texture2D,  6);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pDiffuseAlbedo,                 ViewDimension::Texture2D,  7);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pSpecularAlbedo,                ViewDimension::Texture2D,  8);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pNormals,                       ViewDimension::Texture2D,  9);
+    m_pTraceRaysDenoiserParameterSet->SetTextureUAV(m_pSkipSignal,                    ViewDimension::Texture2D, 10);
 
     return true;
 }
