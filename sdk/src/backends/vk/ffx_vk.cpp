@@ -1313,7 +1313,7 @@ FfxConstantAllocation BackendContext_VK::FallbackConstantAllocator(void* data, F
 
     FFX_ASSERT(uniformBufferMem);
 
-    allocation.resource.resource = uniformBuffer;
+    allocation.resource.resource = (void*)(uintptr_t)uniformBuffer;
     allocation.handle            = 0;
 
     if (data)
@@ -3639,7 +3639,7 @@ FfxErrorCode CreatePipelineVK(FfxInterface* backendInterface,
     pipelineCreateInfo.layout = pPipelineLayout->pipelineLayout;
 
     VkPipeline computePipeline = VK_NULL_HANDLE;
-    if (backendContext->vkFunctionTable.vkCreateComputePipelines(backendContext->device, nullptr, 1, &pipelineCreateInfo, nullptr, &computePipeline) != VK_SUCCESS) {
+    if (backendContext->vkFunctionTable.vkCreateComputePipelines(backendContext->device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &computePipeline) != VK_SUCCESS) {
         return FFX_ERROR_BACKEND_API_ERROR;
     }
 
@@ -3920,7 +3920,7 @@ static FfxErrorCode executeGpuJobCompute(BackendContext_VK*    backendContext,
             job->computeJobDescriptor.pipeline.constantBufferBindings[currentRootConstantIndex].slotIndex;
         writeDescriptorSets[descriptorWriteIndex].dstArrayElement = 0;
 
-        bufferDescriptorInfos[bufferDescriptorIndex].buffer = static_cast<VkBuffer>(allocation.resource.resource);
+        bufferDescriptorInfos[bufferDescriptorIndex].buffer = (VkBuffer)(uintptr_t)allocation.resource.resource;
         bufferDescriptorInfos[bufferDescriptorIndex].offset = static_cast<VkDeviceSize>(allocation.handle);
         bufferDescriptorInfos[bufferDescriptorIndex].range  = dataSize;
 

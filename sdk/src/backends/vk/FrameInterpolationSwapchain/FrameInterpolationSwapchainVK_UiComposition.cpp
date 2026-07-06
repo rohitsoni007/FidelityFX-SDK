@@ -74,7 +74,7 @@ void releaseUiBlitGpuResources(const VkAllocationCallbacks* pAllocator)
     s_uiCompositionDescriptorSetLayout = VK_NULL_HANDLE;
 
     vkDestroyRenderPass(s_uiCompositionDevice, s_uiCompositionRenderPass, pAllocator);
-    s_uiCompositionRenderPass = nullptr;
+    s_uiCompositionRenderPass = VK_NULL_HANDLE;
 
     for (uint32_t i = 0; i < _countof(s_uiCompositionImageViews); ++i)
     {

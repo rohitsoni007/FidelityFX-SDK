@@ -57,7 +57,7 @@ void releaseDebugPacingGpuResources(const VkAllocationCallbacks* pAllocator)
     s_debugPacingPipelineLayout = VK_NULL_HANDLE;
 
     vkDestroyRenderPass(s_debugPacingDevice, s_debugPacingRenderPass, pAllocator);
-    s_debugPacingRenderPass = nullptr;
+    s_debugPacingRenderPass = VK_NULL_HANDLE;
 
     for (uint32_t i = 0; i < _countof(s_debugPacingImageRTViews); ++i)
     {

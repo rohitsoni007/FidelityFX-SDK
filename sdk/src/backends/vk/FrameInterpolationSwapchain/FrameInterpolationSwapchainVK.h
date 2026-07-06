@@ -56,7 +56,7 @@ extern "C" {
 #endif
 
 // Provided by VK_KHR_swapchain
-VkResult vkAcquireNextImageFFX(
+VkResult VKAPI_CALL vkAcquireNextImageFFX(
     VkDevice                                    device,
     VkSwapchainKHR                              swapchain,
     uint64_t                                    timeout,
@@ -70,23 +70,23 @@ VkResult vkCreateSwapchainFFX(
     const VkAllocationCallbacks*                pAllocator,
     VkSwapchainKHR*                             pSwapchain);
 
-void vkDestroySwapchainFFX(
+void VKAPI_CALL vkDestroySwapchainFFX(
     VkDevice                                    device,
     VkSwapchainKHR                              swapchain,
     const VkAllocationCallbacks*                pAllocator);
 
-VkResult vkGetSwapchainImagesFFX(
+VkResult VKAPI_CALL vkGetSwapchainImagesFFX(
     VkDevice                                    device,
     VkSwapchainKHR                              swapchain,
     uint32_t*                                   pSwapchainImageCount,
     VkImage*                                    pSwapchainImages);
 
-VkResult vkQueuePresentFFX(
+VkResult VKAPI_CALL vkQueuePresentFFX(
     VkQueue                                     queue,
     const VkPresentInfoKHR*                     pPresentInfo);
 
 // Provided by VK_EXT_hdr_metadata
-void vkSetHdrMetadataFFX(
+void VKAPI_CALL vkSetHdrMetadataFFX(
     VkDevice device,
     uint32_t swapchainCount,
     const VkSwapchainKHR* pSwapchains,

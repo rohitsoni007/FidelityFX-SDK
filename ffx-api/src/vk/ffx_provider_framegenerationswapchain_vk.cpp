@@ -58,7 +58,7 @@ VkResult vkCreateSwapchainFFXAPI(
     }
 
     if (result == VK_SUCCESS)
-        *pSwapchain = reinterpret_cast<VkSwapchainKHR>(internal_context->fiSwapChain);
+        *pSwapchain = internal_context->fiSwapChain;
 
     return result;
 }
@@ -261,7 +261,7 @@ ffxReturnCode_t ffxProvider_FrameGenerationSwapChain_VK::Dispatch(ffxContext* co
     InternalFgScContext* internal_context = reinterpret_cast<InternalFgScContext*>(*context);
     if (auto desc = ffx::DynamicCast<ffxDispatchDescFrameGenerationSwapChainWaitForPresentsVK>(header))
     {
-        ffxWaitForPresents(internal_context->fiSwapChain);
+        ffxWaitForPresents(reinterpret_cast<FfxSwapchain>(static_cast<uintptr_t>(internal_context->fiSwapChain)));
         return FFX_API_RETURN_OK;
     }
     else

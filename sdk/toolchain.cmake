@@ -58,6 +58,15 @@ if (FFX_API_BACKEND STREQUAL DX12_X64 OR
 
 	# Ensure our platform toolset is x64
 	set(CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE "x64" CACHE STRING "" FORCE)
+
+elseif(FFX_API_BACKEND STREQUAL VK_X86)
+
+	# Building as a subdirectory of an existing 32-bit (Win32) project.
+	# The parent has already set CMAKE_GENERATOR_PLATFORM=Win32, so we must
+	# NOT override it here — just configure the postfix and system vars.
+	set(CMAKE_RELWITHDEBINFO_POSTFIX drel)
+	set(CMAKE_SYSTEM_NAME WINDOWS)
+	set(CMAKE_SYSTEM_VERSION 10.0)
 	
 elseif(FFX_API_BACKEND STREQUAL DX12_ARM64)
 
