@@ -102,11 +102,25 @@ ffxReturnCode_t ffxProvider_FSR3Upscale::CreateContext(ffxContext* context, ffxC
             Validator{ desc->fpMessage, header }.AcceptExtensions({ FFX_API_CREATE_CONTEXT_DESC_TYPE_BACKEND_VK, FFX_API_DESC_TYPE_OVERRIDE_VERSION });
 #endif // FFX_BACKEND_DX12
         }
+        #include <cstdio>
+        auto LogToFile = [](const char* msg) {
+            /*
+                FILE* f = nullptr;
+                fopen_s(&f, "fsr3_debug.log", "a");
+                if (f) {
+                    fprintf(f, "%s\n", msg);
+                    fclose(f);
+                }
+                */
+        };
+        LogToFile("ffxProvider_FSR3Upscale::CreateContext Entry");
         InternalFsr3UpscalerUContext* internal_context = alloc.construct<InternalFsr3UpscalerUContext>();
         VERIFY(internal_context, FFX_API_RETURN_ERROR_MEMORY);
         internal_context->header.provider = this;
 
+        LogToFile("ffxProvider_FSR3Upscale::CreateContext calling MustCreateBackend");
         TRY(MustCreateBackend(header, &internal_context->backendInterface, 1, alloc));
+        LogToFile("ffxProvider_FSR3Upscale::CreateContext MustCreateBackend finished");
 
         FfxFsr3UpscalerContextDescription initializationParameters = {0};
         initializationParameters.backendInterface = internal_context->backendInterface;
@@ -122,14 +136,18 @@ ffxReturnCode_t ffxProvider_FSR3Upscale::CreateContext(ffxContext* context, ffxC
         internal_context->fpMessage = desc->fpMessage;
 
         // Create the FSR3UPSCALER context
+        LogToFile("ffxProvider_FSR3Upscale::CreateContext calling ffxFsr3UpscalerContextCreate");
         TRY2(ffxFsr3UpscalerContextCreate(&internal_context->context, &initializationParameters));
+        LogToFile("ffxProvider_FSR3Upscale::CreateContext ffxFsr3UpscalerContextCreate finished");
         
         ffxFsr3UpscalerSetGlobalDebugMessage(reinterpret_cast<ffxMessageCallback>(desc->fpMessage), 0);
 
         // set up FSR3Upscaler "shared" resources (no resource sharing in the upscaler provider though, since providers are fully independent and we can't guarantee all upscale providers will be compatible with other effects)
         {
             FfxFsr3UpscalerSharedResourceDescriptions fs3UpscalerResourceDescs = {};
+            LogToFile("ffxProvider_FSR3Upscale::CreateContext calling ffxFsr3UpscalerGetSharedResourceDescriptions");
             TRY2(ffxFsr3UpscalerGetSharedResourceDescriptions(&internal_context->context, &fs3UpscalerResourceDescs));
+            LogToFile("ffxProvider_FSR3Upscale::CreateContext ffxFsr3UpscalerGetSharedResourceDescriptions finished");
 
             {
                 FfxCreateResourceDescription dilD = fs3UpscalerResourceDescs.dilatedDepth;

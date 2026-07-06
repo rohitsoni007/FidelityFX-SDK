@@ -35,6 +35,10 @@
 
 #include <vulkan/vulkan.h>
 
+VkPhysicalDeviceMemoryProperties g_FSR3_CachedMemProperties = {};
+VkPhysicalDeviceProperties g_FSR3_CachedDeviceProperties = {};
+bool g_FSR3_CachedPropertiesInitialized = false;
+
 // prototypes for functions in the interface
 FfxVersionNumber       GetSDKVersionVK(FfxInterface* backendInterface);
 FfxErrorCode           GetEffectGpuMemoryUsageVK(FfxInterface* backendInterface, FfxUInt32 effectContextId, FfxEffectMemoryUsage* outVramUsage);
@@ -200,7 +204,7 @@ typedef struct BackendContext_VK {
     VkPipelineStageFlags    srcStageMask = 0;
     VkPipelineStageFlags    dstStageMask = 0;
 
-    typedef struct alignas(32) EffectContext {
+    typedef struct EffectContext {
 
         // Effect identifier -- used for various resource callbacks to application
         FfxEffect           effectId;
@@ -274,11 +278,8 @@ typedef struct BackendContext_VK {
 
 FFX_API size_t ffxGetScratchMemorySizeVK(VkPhysicalDevice physicalDevice, size_t maxContexts)
 {
-    uint32_t numExtensions = 0;
-
-    if (physicalDevice)
-        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &numExtensions, nullptr);
-
+    // Hardcode to 64 to avoid querying device extensions via vulkan loader calls which crash on x86
+    uint32_t numExtensions = 64;
     uint32_t extensionPropArraySize = sizeof(VkExtensionProperties) * numExtensions;
     uint32_t gpuJobDescArraySize = FFX_ALIGN_UP(maxContexts * FFX_MAX_GPU_JOBS * sizeof(FfxGpuJobDescription), sizeof(uint32_t));
     uint32_t resourceViewArraySize = FFX_ALIGN_UP(((maxContexts * FFX_MAX_QUEUED_FRAMES * FFX_MAX_RESOURCE_COUNT * 2) + FFX_MAX_BINDLESS_DESCRIPTOR_COUNT) * sizeof(BackendContext_VK::VkResourceView), sizeof(uint32_t));
@@ -398,8 +399,7 @@ uint32_t findMemoryTypeIndex(VkPhysicalDevice physicalDevice, VkMemoryRequiremen
 {
     FFX_ASSERT(NULL != physicalDevice);
 
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+    VkPhysicalDeviceMemoryProperties memProperties = g_FSR3_CachedMemProperties;
 
     uint32_t bestCandidate = UINT32_MAX;
 
@@ -1256,9 +1256,11 @@ FfxConstantAllocation BackendContext_VK::FallbackConstantAllocator(void* data, F
         // allocate dynamic uniform buffer
 
         // get alignment
-        VkPhysicalDeviceProperties physicalDeviceProperties = {};
-        vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+        VkPhysicalDeviceProperties physicalDeviceProperties = g_FSR3_CachedDeviceProperties;
         uniformBufferAlignment = physicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
+        if (uniformBufferAlignment == 0) {
+            uniformBufferAlignment = 256;
+        }
 
         uniformBufferSize = FFX_ALIGN_UP(FFX_BUFFER_SIZE, uniformBufferAlignment) * maxEffectContexts * FFX_MAX_PASS_COUNT * FFX_MAX_QUEUED_FRAMES;
 
@@ -1384,6 +1386,18 @@ FfxErrorCode GetEffectGpuMemoryUsageVK(FfxInterface* backendInterface, FfxUInt32
 
 FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect effect, FfxEffectBindlessConfig* bindlessConfig, FfxUInt32* effectContextId)
 {
+    #include <cstdio>
+    auto LogToFile = [](const char* msg) {
+        /*
+        FILE* f = nullptr;
+        fopen_s(&f, "fsr3_debug.log", "a");
+        if (f) {
+            fprintf(f, "%s\n", msg);
+            fclose(f);
+        }
+        */
+    };
+    LogToFile("CreateBackendContextVK: Entry");
     VkDeviceContext* vkDeviceContext = reinterpret_cast<VkDeviceContext*>(backendInterface->device);
 
     FFX_ASSERT(NULL != backendInterface);
@@ -1391,16 +1405,24 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
     FFX_ASSERT(VK_NULL_HANDLE != vkDeviceContext->vkDevice);
     FFX_ASSERT(VK_NULL_HANDLE != vkDeviceContext->vkPhysicalDevice);
 
+    LogToFile("CreateBackendContextVK: After assert");
     // set up some internal resources we need (space for resource views and constant buffers)
     BackendContext_VK* backendContext = (BackendContext_VK*)backendInterface->scratchBuffer;
 
+    LogToFile("CreateBackendContextVK: Check refCount");
     // Set things up if this is the first invocation
     if (!backendContext->refCount) {
-
+        LogToFile("CreateBackendContextVK: First invocation, resetting");
+        char dbgBuf2[256];
+        sprintf_s(dbgBuf2, "CreateBackendContextVK: backendInterface=%p, scratchBuffer=%p, sizeof=%u", 
+                  (void*)backendInterface, (void*)backendInterface->scratchBuffer, (unsigned int)sizeof(BackendContext_VK));
+        LogToFile(dbgBuf2);
         resetBackendContext(backendContext);
 
+        LogToFile("CreateBackendContextVK: Constructing mutex");
         new (&backendContext->uniformBufferMutex) std::mutex();
 
+        LogToFile("CreateBackendContextVK: Computing sizes");
         // Map all of our pointers
         uint32_t gpuJobDescArraySize   = FFX_ALIGN_UP(backendContext->maxEffectContexts * FFX_MAX_GPU_JOBS * sizeof(FfxGpuJobDescription), sizeof(uint32_t));
         uint32_t resourceViewArraySize = FFX_ALIGN_UP(((backendContext->maxEffectContexts * FFX_MAX_QUEUED_FRAMES * FFX_MAX_RESOURCE_COUNT * 2) + FFX_MAX_BINDLESS_DESCRIPTOR_COUNT) * sizeof(BackendContext_VK::VkResourceView), sizeof(uint32_t));
@@ -1410,44 +1432,53 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
         uint32_t contextArraySize = FFX_ALIGN_UP(backendContext->maxEffectContexts * sizeof(BackendContext_VK::EffectContext), sizeof(uint32_t));
         uint8_t* pMem = (uint8_t*)((BackendContext_VK*)(backendContext + 1));
 
+        LogToFile("CreateBackendContextVK: Mapping pGpuJobs");
         // Map gpu job array
         backendContext->pGpuJobs = (FfxGpuJobDescription*)pMem;
         memset(backendContext->pGpuJobs, 0, gpuJobDescArraySize);
         pMem += gpuJobDescArraySize;
 
+        LogToFile("CreateBackendContextVK: Mapping pResourceViews");
         // Map the resource view array
         backendContext->pResourceViews = (BackendContext_VK::VkResourceView*)(pMem);
         memset(backendContext->pResourceViews, 0, resourceViewArraySize);
         pMem += resourceViewArraySize;
 
+        LogToFile("CreateBackendContextVK: Mapping pStagingRingBuffer");
         // Map the staging ring buffer array
         backendContext->pStagingRingBuffer = (uint8_t*)pMem;
         memset(backendContext->pStagingRingBuffer, 0, stagingRingBufferArraySize);
         pMem += stagingRingBufferArraySize;
 
+        LogToFile("CreateBackendContextVK: Mapping pPipelineLayouts");
         // Map pipeline array
         backendContext->pPipelineLayouts = (BackendContext_VK::PipelineLayout*)pMem;
         memset(backendContext->pPipelineLayouts, 0, pipelineArraySize);
         pMem += pipelineArraySize;
 
+        LogToFile("CreateBackendContextVK: Mapping pResources");
         // Map resource array
         backendContext->pResources = (BackendContext_VK::Resource*)pMem;
         memset(backendContext->pResources, 0, resourceArraySize);
         pMem += resourceArraySize;
 
+        LogToFile("CreateBackendContextVK: Clearing resource mappings");
         // Clear out all resource mappings
         for (uint32_t i = 0; i < backendContext->maxEffectContexts * FFX_MAX_RESOURCE_COUNT; ++i) {
             backendContext->pResources[i].uavViewIndex = backendContext->pResources[i].srvViewIndex = -1;
         }
 
+        LogToFile("CreateBackendContextVK: Mapping pEffectContexts");
         // Map context array
         backendContext->pEffectContexts = (BackendContext_VK::EffectContext*)pMem;
         memset(backendContext->pEffectContexts, 0, contextArraySize);
         pMem += contextArraySize;
 
+        LogToFile("CreateBackendContextVK: Mapping extensionProperties");
         // Map extension array
         backendContext->extensionProperties = (VkExtensionProperties*)pMem;
 
+        LogToFile("CreateBackendContextVK: Resolving vkDeviceProcAddr");
         // if vkGetDeviceProcAddr is NULL, use the one from the vulkan header
         if (vkDeviceContext->vkDeviceProcAddr == NULL)
             vkDeviceContext->vkDeviceProcAddr = vkGetDeviceProcAddr;
@@ -1510,10 +1541,8 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
         backendContext->vkFunctionTable.vkCmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkDeviceContext->vkDeviceProcAddr(backendContext->device, "vkCmdBeginDebugUtilsLabelEXT");
         backendContext->vkFunctionTable.vkCmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkDeviceContext->vkDeviceProcAddr(backendContext->device, "vkCmdEndDebugUtilsLabelEXT");
 
-        // enumerate all the device extensions
+        // enumerate all the device extensions (bypass for x86 loader crash)
         backendContext->numDeviceExtensions = 0;
-        vkEnumerateDeviceExtensionProperties(backendContext->physicalDevice, nullptr, &backendContext->numDeviceExtensions, nullptr);
-        vkEnumerateDeviceExtensionProperties(backendContext->physicalDevice, nullptr, &backendContext->numDeviceExtensions, backendContext->extensionProperties);
 
         // create a global descriptor pool to hold all descriptors we'll need
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
@@ -1540,12 +1569,15 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
         // set bindless resource view to base
         backendContext->bindlessBase = (backendContext->maxEffectContexts * FFX_MAX_QUEUED_FRAMES * FFX_MAX_RESOURCE_COUNT * 2);
 
+        LogToFile("CreateBackendContextVK: Allocating dynamic uniform buffer");
         // allocate dynamic uniform buffer
         {
             // get alignment
-            VkPhysicalDeviceProperties physicalDeviceProperties = {};
-            vkGetPhysicalDeviceProperties(backendContext->physicalDevice, &physicalDeviceProperties);
+            VkPhysicalDeviceProperties physicalDeviceProperties = g_FSR3_CachedDeviceProperties;
             backendContext->uniformBufferAlignment = physicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
+            if (backendContext->uniformBufferAlignment == 0) {
+                backendContext->uniformBufferAlignment = 256;
+            }
 
             backendContext->uniformBufferSize =
                 FFX_ALIGN_UP(FFX_BUFFER_SIZE, backendContext->uniformBufferAlignment) * backendContext->maxEffectContexts * FFX_MAX_PASS_COUNT * FFX_MAX_QUEUED_FRAMES;
@@ -1588,6 +1620,7 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
                 }
             }
 
+            LogToFile("CreateBackendContextVK: Allocating uniform memory");
             VkResult result = backendContext->vkFunctionTable.vkAllocateMemory(backendContext->device, &allocInfo, nullptr, &backendContext->uniformBufferMemory);
 
             if (result != VK_SUCCESS)
@@ -1602,6 +1635,7 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
                 }
             }
 
+            LogToFile("CreateBackendContextVK: Mapping uniform memory");
             // map the memory block
             if (backendContext->vkFunctionTable.vkMapMemory(
                     backendContext->device, backendContext->uniformBufferMemory, 0, backendContext->uniformBufferSize, 0, &backendContext->uniformBufferMem) !=
@@ -1610,6 +1644,7 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
                 return FFX_ERROR_BACKEND_API_ERROR;
             }
 
+            LogToFile("CreateBackendContextVK: Binding uniform memory");
             if (backendContext->vkFunctionTable.vkBindBufferMemory(
                     backendContext->device, backendContext->uniformBuffer, backendContext->uniformBufferMemory, 0) != VK_SUCCESS)
             {
@@ -1617,6 +1652,7 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
             }
         }
 
+        LogToFile("CreateBackendContextVK: Setting up Breadcrumbs data");
         // Setup Breadcrumbs data
         {
             FfxDeviceCapabilities devCaps = {};
@@ -1635,7 +1671,7 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
             bufferInfo.pQueueFamilyIndices = nullptr;
 
             VkBuffer testBuffer = VK_NULL_HANDLE;
-            if (vkCreateBuffer(backendContext->device, &bufferInfo, nullptr, &testBuffer) != VK_SUCCESS)
+            if (backendContext->vkFunctionTable.vkCreateBuffer(backendContext->device, &bufferInfo, nullptr, &testBuffer) != VK_SUCCESS)
             {
                 FFX_ASSERT_FAIL("Cannot create test Breadcrumbs buffer to find memory requirements!");
                 return FFX_ERROR_BACKEND_API_ERROR;
@@ -1674,8 +1710,7 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
             backendContext->vkFunctionTable.vkDestroyBuffer(backendContext->device, testBuffer, nullptr);
 
             // Find proper memory index for created buffers
-            VkPhysicalDeviceMemoryProperties memoryProps = {};
-            vkGetPhysicalDeviceMemoryProperties(backendContext->physicalDevice, &memoryProps);
+            VkPhysicalDeviceMemoryProperties memoryProps = g_FSR3_CachedMemProperties;
 
             const VkMemoryPropertyFlags requiredMemoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
             VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
@@ -1966,126 +2001,23 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
         }
     }
 
+    LogToFile("CreateBackendContextVK: Exit successful");
     return FFX_OK;
 }
 
 FfxErrorCode GetDeviceCapabilitiesVK(FfxInterface* backendInterface, FfxDeviceCapabilities* deviceCapabilities)
 {
-    BackendContext_VK* backendContext = (BackendContext_VK*)backendInterface->scratchBuffer;
-
-    // no shader model in vulkan so assume the minimum
+    // Hardcode capabilities to avoid physical device Vulkan queries that crash on x86 loader calls
     deviceCapabilities->maximumSupportedShaderModel = FFX_SHADER_MODEL_5_1;
     deviceCapabilities->waveLaneCountMin = 32;
-    deviceCapabilities->waveLaneCountMax = 32;
-    deviceCapabilities->fp16Supported = false;
+    deviceCapabilities->waveLaneCountMax = 64;
+    deviceCapabilities->fp16Supported = true;
     deviceCapabilities->raytracingSupported = false;
     deviceCapabilities->deviceCoherentMemorySupported = false;
     deviceCapabilities->dedicatedAllocationSupported = false;
     deviceCapabilities->bufferMarkerSupported = false;
-    deviceCapabilities->extendedSynchronizationSupported = false;
-    deviceCapabilities->shaderStorageBufferArrayNonUniformIndexing = false;
-
-    BackendContext_VK* context = (BackendContext_VK*)backendInterface->scratchBuffer;
-
-    // check if extensions are enabled
-
-    for (uint32_t i = 0; i < backendContext->numDeviceExtensions; i++)
-    {
-        if (strcmp(backendContext->extensionProperties[i].extensionName, VK_EXT_SUBGROUP_SIZE_CONTROL_EXTENSION_NAME) == 0)
-        {
-            // check if we the max subgroup size allows us to use wave64
-            VkPhysicalDeviceSubgroupSizeControlProperties subgroupSizeControlProperties = {};
-            subgroupSizeControlProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES;
-
-            VkPhysicalDeviceProperties2 deviceProperties2 = {};
-            deviceProperties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-            deviceProperties2.pNext = &subgroupSizeControlProperties;
-            vkGetPhysicalDeviceProperties2(context->physicalDevice, &deviceProperties2);
-
-            deviceCapabilities->waveLaneCountMin = subgroupSizeControlProperties.minSubgroupSize;
-            deviceCapabilities->waveLaneCountMax = subgroupSizeControlProperties.maxSubgroupSize;
-        }
-        else if (strcmp(backendContext->extensionProperties[i].extensionName, VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME) == 0)
-        {
-            // check for fp16 support
-            VkPhysicalDeviceShaderFloat16Int8Features shaderFloat18Int8Features = {};
-            shaderFloat18Int8Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
-
-            VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {};
-            physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-            physicalDeviceFeatures2.pNext = &shaderFloat18Int8Features;
-
-            vkGetPhysicalDeviceFeatures2(context->physicalDevice, &physicalDeviceFeatures2);
-
-            deviceCapabilities->fp16Supported = (bool)shaderFloat18Int8Features.shaderFloat16;
-        }
-        else if (strcmp(backendContext->extensionProperties[i].extensionName, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME) == 0)
-        {
-            // check for ray tracing support
-            VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures = {};
-            accelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-
-            VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {};
-            physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-            physicalDeviceFeatures2.pNext = &accelerationStructureFeatures;
-
-            vkGetPhysicalDeviceFeatures2(context->physicalDevice, &physicalDeviceFeatures2);
-
-            deviceCapabilities->raytracingSupported = (bool)accelerationStructureFeatures.accelerationStructure;
-        }
-        else if (strcmp(backendContext->extensionProperties[i].extensionName, VK_AMD_DEVICE_COHERENT_MEMORY_EXTENSION_NAME) == 0)
-        {
-            // check for coherent memory support
-            VkPhysicalDeviceCoherentMemoryFeaturesAMD coherentMemoryFeatures = {};
-            coherentMemoryFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD;
-
-            VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {};
-            physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-            physicalDeviceFeatures2.pNext = &coherentMemoryFeatures;
-
-            vkGetPhysicalDeviceFeatures2(context->physicalDevice, &physicalDeviceFeatures2);
-
-            deviceCapabilities->deviceCoherentMemorySupported = (bool)coherentMemoryFeatures.deviceCoherentMemory;
-        }
-        else if (strcmp(backendContext->extensionProperties[i].extensionName, VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME) == 0)
-        {
-            // no features structure so extension name is enough
-            deviceCapabilities->dedicatedAllocationSupported = true;
-        }
-        else if (strcmp(backendContext->extensionProperties[i].extensionName, VK_AMD_BUFFER_MARKER_EXTENSION_NAME) == 0)
-        {
-            // no features structure so extension name is enough
-            deviceCapabilities->bufferMarkerSupported = true;
-        }
-        else if (strcmp(backendContext->extensionProperties[i].extensionName, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) == 0)
-        {
-            // check for extended synchronization support
-            VkPhysicalDeviceSynchronization2FeaturesKHR synchronizationFeatures = {};
-            synchronizationFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR;
-
-            VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {};
-            physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-            physicalDeviceFeatures2.pNext = &synchronizationFeatures;
-
-            vkGetPhysicalDeviceFeatures2(context->physicalDevice, &physicalDeviceFeatures2);
-
-            deviceCapabilities->extendedSynchronizationSupported = (bool)synchronizationFeatures.synchronization2;
-        }
-        else if (strcmp(backendContext->extensionProperties[i].extensionName, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) == 0)
-        {
-            // check for coherent memory support
-            VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures = {};
-            descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-
-            VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {};
-            physicalDeviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-            physicalDeviceFeatures2.pNext = &descriptorIndexingFeatures;
-
-            vkGetPhysicalDeviceFeatures2(context->physicalDevice, &physicalDeviceFeatures2);
-
-            deviceCapabilities->shaderStorageBufferArrayNonUniformIndexing = (bool)descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing;
-        }
-    }
+    deviceCapabilities->extendedSynchronizationSupported = true;
+    deviceCapabilities->shaderStorageBufferArrayNonUniformIndexing = true;
 
     return FFX_OK;
 }
@@ -4347,10 +4279,8 @@ void BreadcrumbsPrintDeviceInfoVK(
     char* buff = *printBuffer;
     size_t buffSize = *printSize;
 
-    VkPhysicalDeviceProperties devProps = {};
+    VkPhysicalDeviceProperties devProps = g_FSR3_CachedDeviceProperties;
     VkPhysicalDeviceFeatures devFeatures = {};
-    vkGetPhysicalDeviceProperties(backendContext->physicalDevice, &devProps);
-    vkGetPhysicalDeviceFeatures(backendContext->physicalDevice, &devFeatures);
 
     FFX_BREADCRUMBS_APPEND_STRING(buff, buffSize, "[VkPhysicalDeviceProperties]\n" FFX_BREADCRUMBS_PRINTING_INDENT "apiVersion: ");
     FFX_BREADCRUMBS_APPEND_UINT(buff, buffSize, VK_API_VERSION_MAJOR(devProps.apiVersion));

@@ -43,6 +43,8 @@ struct ffxCreateBackendVKDesc
     VkDevice                   vkDevice;          ///< the logical device used by the program.
     VkPhysicalDevice           vkPhysicalDevice;  ///< the physical device used by the program.
     PFN_vkGetDeviceProcAddr    vkDeviceProcAddr;  ///< function pointer to get device procedure addresses
+    const VkPhysicalDeviceMemoryProperties* pMemProperties;
+    const VkPhysicalDeviceProperties*       pDeviceProperties;
 };
 
 #define FFX_API_EFFECT_ID_FGSC_VK 0x00040000u

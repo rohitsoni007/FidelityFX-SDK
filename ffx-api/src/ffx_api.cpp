@@ -38,18 +38,35 @@ static uint64_t GetVersionOverride(const ffxApiHeader* header)
     return 0;
 }
 
+#include <cstdio>
+static void LogToFile(const char* msg) {
+    /*
+                FILE* f = nullptr;
+                fopen_s(&f, "fsr3_debug.log", "a");
+                if (f) {
+                    fprintf(f, "%s\n", msg);
+                    fclose(f);
+                }
+                */
+}
+
 FFX_API_ENTRY ffxReturnCode_t ffxCreateContext(ffxContext* context, ffxCreateContextDescHeader* desc, const ffxAllocationCallbacks* memCb)
 {
+    LogToFile("FSR3 API: ffxCreateContext Entry");
     VERIFY(desc != nullptr, FFX_API_RETURN_ERROR_PARAMETER);
     VERIFY(context != nullptr, FFX_API_RETURN_ERROR_PARAMETER);
 
     *context = nullptr;
 
+    LogToFile("FSR3 API: ffxCreateContext GetffxProvider");
     const ffxProvider* provider = GetffxProvider(desc->type, GetVersionOverride(desc), GetDevice(desc));
     VERIFY(provider != nullptr, FFX_API_RETURN_NO_PROVIDER);
     
     Allocator alloc{memCb};
-    return provider->CreateContext(context, desc, alloc);
+    LogToFile("FSR3 API: ffxCreateContext Calling provider->CreateContext");
+    ffxReturnCode_t rc = provider->CreateContext(context, desc, alloc);
+    LogToFile("FSR3 API: ffxCreateContext provider->CreateContext finished");
+    return rc;
 }
 
 FFX_API_ENTRY ffxReturnCode_t ffxDestroyContext(ffxContext* context, const ffxAllocationCallbacks* memCb)

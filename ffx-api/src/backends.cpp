@@ -56,18 +56,54 @@ ffxReturnCode_t CreateBackend(const ffxCreateContextDescHeader *desc, bool& back
 #elif FFX_BACKEND_VK
         case FFX_API_CREATE_CONTEXT_DESC_TYPE_BACKEND_VK:
         {
+            #include <cstdio>
+            auto LogToFile = [](const char* msg) {
+                /*
+                FILE* f = nullptr;
+                fopen_s(&f, "fsr3_debug.log", "a");
+                if (f) {
+                    fprintf(f, "%s\n", msg);
+                    fclose(f);
+                }
+                */
+            };
+            LogToFile("CreateBackend VK: Entry");
             // check for double backend just to make sure.
-            if (backendFound)
+            if (backendFound) {
+                LogToFile("CreateBackend VK: double backend error");
                 return FFX_API_RETURN_ERROR;
+            }
             backendFound = true;
 
             const auto *backendDesc = reinterpret_cast<const ffxCreateBackendVKDesc*>(it);
+            char dbgBuf[256];
+            sprintf_s(dbgBuf, "CreateBackend VK: it=%p, type=%u, vkDevice=%p, vkPhysicalDevice=%p, gdpa=%p", 
+                      (void*)it, (unsigned int)it->type, (void*)backendDesc->vkDevice, (void*)backendDesc->vkPhysicalDevice, (void*)backendDesc->vkDeviceProcAddr);
+            LogToFile(dbgBuf);
+            extern VkPhysicalDeviceMemoryProperties g_FSR3_CachedMemProperties;
+            extern VkPhysicalDeviceProperties g_FSR3_CachedDeviceProperties;
+            extern bool g_FSR3_CachedPropertiesInitialized;
+            if (backendDesc->pMemProperties) {
+                g_FSR3_CachedMemProperties = *backendDesc->pMemProperties;
+            }
+            if (backendDesc->pDeviceProperties) {
+                g_FSR3_CachedDeviceProperties = *backendDesc->pDeviceProperties;
+            }
+            g_FSR3_CachedPropertiesInitialized = true;
+
+            LogToFile("CreateBackend VK: Init VkDeviceContext");
             VkDeviceContext deviceContext = { backendDesc->vkDevice, backendDesc->vkPhysicalDevice, backendDesc->vkDeviceProcAddr };
+            LogToFile("CreateBackend VK: calling ffxGetDeviceVK");
             FfxDevice device = ffxGetDeviceVK(&deviceContext);
+            LogToFile("CreateBackend VK: calling ffxGetScratchMemorySizeVK");
             size_t scratchBufferSize = ffxGetScratchMemorySizeVK(backendDesc->vkPhysicalDevice, contexts);
+            LogToFile("CreateBackend VK: alloc.alloc scratchBuffer");
             void* scratchBuffer = alloc.alloc(scratchBufferSize);
+            LogToFile("CreateBackend VK: memset scratchBuffer");
             memset(scratchBuffer, 0, scratchBufferSize);
+            LogToFile("CreateBackend VK: calling ffxGetInterfaceVK");
             TRY2(ffxGetInterfaceVK(iface, device, scratchBuffer, scratchBufferSize, contexts));
+            LogToFile("CreateBackend VK: Exit successful");
             break;
         }
 #endif // FFX_BACKEND_DX12
