@@ -22,6 +22,8 @@
 
 #pragma once
 
+#pragma pack(push, 8)
+
 #include <FidelityFX/host/ffx_assert.h>
 #include <FidelityFX/host/ffx_types.h>
 #include <FidelityFX/host/ffx_error.h>
@@ -662,3 +664,5 @@ typedef struct FfxInterface {
 #if defined(__cplusplus)
 }
 #endif // #if defined(__cplusplus)
+
+#pragma pack(pop)

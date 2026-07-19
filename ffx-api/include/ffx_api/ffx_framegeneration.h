@@ -22,6 +22,8 @@
 
 #pragma once
 
+#pragma pack(push, 8)
+
 #include "ffx_api.h"
 #include "ffx_api_types.h"
 
@@ -188,3 +190,5 @@ struct ffxDispatchDescFrameGenerationPrepareCameraInfo
 #if defined(__cplusplus)
 } // extern "C"
 #endif
+
+#pragma pack(pop)

@@ -21,6 +21,9 @@
 // THE SOFTWARE.
 
 #pragma once
+
+#pragma pack(push, 8)
+
 #include "../ffx_api.h"
 #include "../ffx_api_types.h"
 #include <vulkan/vulkan.h>
@@ -360,3 +363,5 @@ static inline FfxApiResource ffxApiGetResourceVK(void* vkResource, FfxApiResourc
 
     return resource;
 }
+
+#pragma pack(pop)

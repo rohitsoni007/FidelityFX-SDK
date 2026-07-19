@@ -22,6 +22,8 @@
 
 #pragma once
 
+#pragma pack(push, 8)
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -241,3 +243,5 @@ typedef struct FfxApiSwapchainFramePacingTuning
     uint32_t hybridSpinTime;  //How long to spin if allowHybridSpin is true. Measured in timer resolution units. Not recommended to go below 2. Will result in frequent overshoots. Default is 2.
     bool     allowWaitForSingleObjectOnFence; //Allows WaitForSingleObject instead of spinning for fence value. Default is false.
 } FfxApiSwapchainFramePacingTuning;
+
+#pragma pack(pop)

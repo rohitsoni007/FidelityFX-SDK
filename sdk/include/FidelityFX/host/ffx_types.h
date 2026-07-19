@@ -22,6 +22,8 @@
 
 #pragma once
 
+#pragma pack(push, 8)
+
 #include <stdint.h>
 
 ///
@@ -1301,3 +1303,5 @@ typedef struct FfxSwapchainFramePacingTuning
 #ifdef __cplusplus
 }
 #endif  // #ifdef __cplusplus
+
+#pragma pack(pop)

@@ -21,6 +21,9 @@
 // THE SOFTWARE.
 
 #pragma once
+
+#pragma pack(push, 8)
+
 #include "ffx_api.h"
 #include "ffx_api_types.h"
 
@@ -186,3 +189,5 @@ struct ffxQueryDescUpscaleGetGPUMemoryUsage
 #ifdef __cplusplus
 }
 #endif
+
+#pragma pack(pop)

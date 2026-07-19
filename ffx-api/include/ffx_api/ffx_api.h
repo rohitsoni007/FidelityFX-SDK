@@ -22,6 +22,8 @@
 
 #pragma once
 
+#pragma pack(push, 8)
+
 #if defined(__cplusplus)
 extern "C" {
 #endif  // #if defined(__cplusplus)
@@ -156,3 +158,5 @@ typedef ffxReturnCode_t (*PfnFfxDispatch)(ffxContext* context, const ffxDispatch
 #if defined(__cplusplus)
 }
 #endif  // #if defined(__cplusplus)
+
+#pragma pack(pop)

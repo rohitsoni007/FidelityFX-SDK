@@ -398,13 +398,31 @@ int GetFormatPrecisionGroup(FfxSurfaceFormat format)
 
 static FfxErrorCode frameinterpolationCreate(FfxFrameInterpolationContext_Private* context, const FfxFrameInterpolationContextDescription* contextDescription)
 {
+    #include <cstdio>
+    auto LogToFile = [](const char* msg) {
+        /*FILE* f = nullptr;
+        fopen_s(&f, "fsr3_debug.log", "a");
+        if (f) {
+            fprintf(f, "%s\n", msg);
+            fclose(f);
+        }*/
+    };
+    LogToFile("frameinterpolationCreate: Entry");
+
     FFX_ASSERT(context);
     FFX_ASSERT(contextDescription);
 
     // validate compatibility between backbuffer and hudless formats
     int backBufferGroup = GetFormatPrecisionGroup(contextDescription->backBufferFormat);
     int previousInterpolationSourceGroup = GetFormatPrecisionGroup(contextDescription->previousInterpolationSourceFormat);
-    FFX_RETURN_ON_ERROR(backBufferGroup >= 0 && previousInterpolationSourceGroup >= 0 && backBufferGroup == previousInterpolationSourceGroup, FFX_ERROR_INVALID_ARGUMENT);
+    if (!(backBufferGroup >= 0 && previousInterpolationSourceGroup >= 0 && backBufferGroup == previousInterpolationSourceGroup)) {
+        char dbg[256];
+        sprintf_s(dbg, "frameinterpolationCreate: Format group check failed. backBufferFormat=%d (group %d), previousInterpolationSourceFormat=%d (group %d)",
+                  contextDescription->backBufferFormat, backBufferGroup,
+                  contextDescription->previousInterpolationSourceFormat, previousInterpolationSourceGroup);
+        LogToFile(dbg);
+        return FFX_ERROR_INVALID_ARGUMENT;
+    }
 
     // Setup the data for implementation.
     memset(context, 0, sizeof(FfxFrameInterpolationContext_Private));
@@ -414,15 +432,31 @@ static FfxErrorCode frameinterpolationCreate(FfxFrameInterpolationContext_Privat
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 4), FFX_ERROR_INVALID_VERSION);
+    if (version != FFX_SDK_MAKE_VERSION(1, 1, 4)) {
+        char dbg[128];
+        sprintf_s(dbg, "frameinterpolationCreate: Version check failed. Got version %d, expected %d", version, FFX_SDK_MAKE_VERSION(1, 1, 4));
+        LogToFile(dbg);
+        return FFX_ERROR_INVALID_VERSION;
+    }
 
     // Create the context.
+    LogToFile("frameinterpolationCreate: calling fpCreateBackendContext for FFX_EFFECT_FRAMEINTERPOLATION");
     FfxErrorCode errorCode = context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_FRAMEINTERPOLATION, nullptr, &context->effectContextId);
-    FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
+    if (errorCode != FFX_OK) {
+        char dbg[128];
+        sprintf_s(dbg, "frameinterpolationCreate: fpCreateBackendContext failed. errorCode=%d", errorCode);
+        LogToFile(dbg);
+        return errorCode;
+    }
 
     // call out for device caps.
     errorCode = context->contextDescription.backendInterface.fpGetDeviceCapabilities(&context->contextDescription.backendInterface, &context->deviceCapabilities);
-    FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
+    if (errorCode != FFX_OK) {
+        char dbg[128];
+        sprintf_s(dbg, "frameinterpolationCreate: fpGetDeviceCapabilities failed. errorCode=%d", errorCode);
+        LogToFile(dbg);
+        return errorCode;
+    }
 
     // set defaults
     context->firstExecution = true;
@@ -661,35 +695,51 @@ FFX_API FfxErrorCode ffxFrameInterpolationGetSharedResourceDescriptions(FfxFrame
 
 FfxErrorCode ffxFrameInterpolationContextCreate(FfxFrameInterpolationContext* context, FfxFrameInterpolationContextDescription* contextDescription)
 {
-    // zero context memory
-    //memset(context, 0, sizeof(FfxFrameinterpolationContext));
+    #include <cstdio>
+    auto LogToFile = [](const char* msg) {
+        /*FILE* f = nullptr;
+        fopen_s(&f, "fsr3_debug.log", "a");
+        if (f) {
+            fprintf(f, "%s\n", msg);
+            fclose(f);
+        }*/
+    };
+    LogToFile("ffxFrameInterpolationContextCreate: Entry");
 
     // check pointers are valid.
-    FFX_RETURN_ON_ERROR(
-        context,
-        FFX_ERROR_INVALID_POINTER);
-    FFX_RETURN_ON_ERROR(
-        contextDescription,
-        FFX_ERROR_INVALID_POINTER);
+    if (!context) {
+        LogToFile("ffxFrameInterpolationContextCreate: context is NULL");
+        return FFX_ERROR_INVALID_POINTER;
+    }
+    if (!contextDescription) {
+        LogToFile("ffxFrameInterpolationContextCreate: contextDescription is NULL");
+        return FFX_ERROR_INVALID_POINTER;
+    }
 
     // validate that all callbacks are set for the interface
-    FFX_RETURN_ON_ERROR(contextDescription->backendInterface.fpGetSDKVersion, FFX_ERROR_INCOMPLETE_INTERFACE);
-    FFX_RETURN_ON_ERROR(contextDescription->backendInterface.fpGetDeviceCapabilities, FFX_ERROR_INCOMPLETE_INTERFACE);
-    FFX_RETURN_ON_ERROR(contextDescription->backendInterface.fpCreateBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
-    FFX_RETURN_ON_ERROR(contextDescription->backendInterface.fpDestroyBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
+    if (!contextDescription->backendInterface.fpGetSDKVersion ||
+        !contextDescription->backendInterface.fpGetDeviceCapabilities ||
+        !contextDescription->backendInterface.fpCreateBackendContext ||
+        !contextDescription->backendInterface.fpDestroyBackendContext) {
+        LogToFile("ffxFrameInterpolationContextCreate: incomplete interface");
+        return FFX_ERROR_INCOMPLETE_INTERFACE;
+    }
 
     // if a scratch buffer is declared, then we must have a size
     if (contextDescription->backendInterface.scratchBuffer) {
-
-        FFX_RETURN_ON_ERROR(contextDescription->backendInterface.scratchBufferSize, FFX_ERROR_INCOMPLETE_INTERFACE);
+        if (!contextDescription->backendInterface.scratchBufferSize) {
+            LogToFile("ffxFrameInterpolationContextCreate: scratchBuffer without size");
+            return FFX_ERROR_INCOMPLETE_INTERFACE;
+        }
     }
-
-    // ensure the context is large enough for the internal context.
-    FFX_STATIC_ASSERT(sizeof(FfxFrameInterpolationContext) >= sizeof(FfxFrameInterpolationContext_Private));
 
     // create the context.
     FfxFrameInterpolationContext_Private* contextPrivate = (FfxFrameInterpolationContext_Private*)(context);
     FfxErrorCode errorCode = frameinterpolationCreate(contextPrivate, contextDescription);
+
+    char dbg[128];
+    sprintf_s(dbg, "ffxFrameInterpolationContextCreate: Exit with code %d", errorCode);
+    LogToFile(dbg);
 
     return errorCode;
 }
